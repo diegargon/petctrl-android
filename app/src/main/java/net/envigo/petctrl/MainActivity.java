@@ -6,42 +6,25 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-
-import android.widget.ArrayAdapter;
-import android.widget.TabHost;
-import android.widget.TextView;
 import android.widget.Toast;
-
 import org.json.JSONObject;
-
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -67,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
     private String admin_password;
     private String ap_name;
 
+
+
     private boolean ShowWelcome = true;
 
     private ArrayList<PetClients> PetClientList;
@@ -81,6 +66,9 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
+
+
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         admin_password = settings.getString("admin_password", null);
         ap_name = settings.getString("ap_name", null);
@@ -89,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         if (admin_password != null && ap_name != null  && admin_password.length() >= 6 && ap_name.length() >= 4) {
             wifiUtils = new WifiUtils(context);
             wifiUtils.cfgAP(ap_name, admin_password);
-            getClientList();
+
             Log.d("Log", "Main, configuring user ap mode");
         } else {
             Toast.makeText(context, R.string.configNeed, Toast.LENGTH_SHORT).show();
@@ -100,42 +88,13 @@ public class MainActivity extends AppCompatActivity {
         //prefs = getSharedPreferences(My_Prefs, MODE_PRIVATE);
         //AutoOn = prefs.getBoolean("AutoOn", true);
 
-
         setupTabs();
-
-        /*
-        HashMap<String, String> conn_data = new HashMap<>();
-        conn_data.put("opt", "user_logout");
-        conn_data.put("uid", settings.getString("uid", "false"));
-        conn_data.put("cookie", settings.getString("cookie", "false"));
-        conn = new Conn(this);
-        conn.execute(conn_data, conn_data);
-*/
-        // Create the adapter that will return a fragment for each of the three
-        // primary sections of the activity.
-
-        //mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(), TabFragmentList);
-        //mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-
-        // Set up the ViewPager with the sections adapter.
-
-
-        /*
-        Bundle b = new Bundle();
-        b.putInt("position", 2);
-        String title = "asd";
-        mSectionsPagerAdapter.add(TestFragment.class, title, b);
-        mSectionsPagerAdapter.notifyDataSetChanged();
-*/
-
-
-        //task.execute();
 
         requestPermissions();
 
     }
 
-    private void getClientList() {
+    public void getClientList() {
 
         wifiUtils.getClientList(true, 300, new iScanListener() {
             @Override
@@ -165,12 +124,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Intent modifySettings=new Intent(MainActivity.this,SettingsActivity.class);
             startActivity(modifySettings);
@@ -190,34 +145,6 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
-
-    /*
-    public static class TestFragment extends Fragment {
-
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        public TestFragment() {}
-
-        public static TestFragment newInstance(int sectionNumber) {
-            TestFragment fragment = new TestFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main2, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label2);
-            textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
-            return rootView;
-        }
-    }
-
-    */
 
 
     public class MyFragmentPageAdapter extends FragmentPagerAdapter {
@@ -288,64 +215,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    /*
-
-    public class SectionsPagerAdapter extends FragmentPagerAdapter {
-
-        //public SectionsPagerAdapter(FragmentManager fm, ArrayList<Fragment> TabFragmentList) {
-        public SectionsPagerAdapter(FragmentManager fm) {
-            super(fm);
-
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            Log.d("Log", "Get Item Called, position: " + position);
-
-            if (position == 0) {
-                //TabFragmentList.get(position);
-
-                return WelcomeFragment.newInstance();
-            }
-            if (position == 1) {
-                return TestFragment.newInstance(position + 1);
-            }
-            if (position == 2) {
-
-                return TestFragment.newInstance(position + 1);
-            }
-            if (position == 3) {
-
-                return TestFragment.newInstance(position + 1);
-            }
-
-            if (position == numTabs -1) {
-                return PetSettings.newInstance();
-            }
-
-            //return PlaceholderFragment.newInstance(position + 1);
-            return null;
-        }
-
-        @Override
-        public int getCount() {
-            // Show 3 total pages.
-            return tabTitles.size();
-
-            // return numTabs;
-        }
-
-        @Nullable
-        @Override
-        public CharSequence getPageTitle(int position) {
-            //return super.getPageTitle(position);
-
-            return tabTitles.get(position);
-        }
-
-    }
-
-    */
     void setupTabs() {
 
 //        tabTitles.add("Emparejar");
@@ -355,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
         //mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         mSectionsPagerAdapter = new MyFragmentPageAdapter(this ,getSupportFragmentManager(), tabFragments, tabTitles);
 
-        if (ShowWelcome && mSectionsPagerAdapter != null) {
+        if (ShowWelcome) {
             //tabTitles.add("Welcome");
             showWelcomeTab();
         }
@@ -377,10 +246,8 @@ public class MainActivity extends AppCompatActivity {
             Bundle b = new Bundle();
             b.putInt("position", i);
             if(i == 0) {
-                //mSectionsPagerAdapter.addFragment(new WelcomeFragment(), "one");
                 fragments.add(Fragment.instantiate(this, WelcomeFragment.class.getName(), b));
             } else {
-                //mSectionsPagerAdapter.addFragment(new PetSettings(), "two");
                 fragments.add(Fragment.instantiate(this, PetSettings.class.getName(), b));
             }
         }
@@ -430,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public class Conn extends ConnRest {
+    static public class Conn extends ConnRest {
 
         public Conn(Context context) {
             super(context);

@@ -213,8 +213,11 @@ public class PetSettings  extends Fragment {
 
     public class Conn extends ConnRest {
 
+        Context context;
+
         public Conn(Context context) {
             super(context);
+            this.context = context;
         }
 
         @Override

@@ -8,6 +8,7 @@
     <string name="no">No</string>
     <string name="configNeed">Debe configurar su dispositivo en el menu de arriba a la derecha</string>
     <string name="closeToContinue">Pulse cerrar al finalizar para volver al modo normal</string>
+    <string name="scan">scan</string>
     <!-- Strings related to Settings -->
     <string name="action_settings">Configuación</string>
     <string name="action_exit">Salir</string>
@@ -23,7 +24,7 @@
     <string name="pref_show_welcome_tab">Bienvenida</string>
     <string name="pref_show_welcome_tab_summary">Mostrar Bienvenida al comenzar</string>
     <!-- About -->
-    <string name="pref_header_about">Sobre...</string>
+    <string name="pref_header_about">Sobre&#8230;</string>
 
     <!-- TABS -->
     <string name="btnUpdate">Actualizar</string>
