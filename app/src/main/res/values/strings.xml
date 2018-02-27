@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Pet Control</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="version">Pet control v1</string>
+    <string name="welcome">Bienvenido</string>
+    <string name="yes">Si</string>
+    <string name="no">No</string>
+    <string name="configNeed">Debe configurar su dispositivo en el menu de arriba a la derecha</string>
+    <string name="closeToContinue">Pulse cerrar al finalizar para volver al modo normal</string>
+    <!-- Strings related to Settings -->
+    <string name="action_settings">Configuación</string>
+    <string name="action_exit">Salir</string>
+    <string name="action_pairdevices">Emparejar</string>
+    <string name="action_pairdevices_ask">¿Emparejar?</string>
+    <!-- General settings -->
+    <string name="pref_header_general">General</string>
+
+    <string name="pref_admin_password">Contraseña administracion</string>
+    <string name="pref_admin_password_summary">Sera usada para acceder a sus dispositivos y como contraseña de conexion del hotspot. No se olvide de ella</string>
+    <string name="pref_ap_name">Hotspot name</string>
+    <string name="pref_ap_name_summary">Nombre Hotspot. Configuraremos su telefono movil para que se puedan conectar los dispositivos</string>
+    <string name="pref_show_welcome_tab">Bienvenida</string>
+    <string name="pref_show_welcome_tab_summary">Mostrar Bienvenida al comenzar</string>
+    <!-- About -->
+    <string name="pref_header_about">Sobre...</string>
+
+    <!-- TABS -->
+    <string name="btnUpdate">Actualizar</string>
+    <string name="btnHelp">Ayuda</string>
+    <string name="btnClose">Cerrar</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>

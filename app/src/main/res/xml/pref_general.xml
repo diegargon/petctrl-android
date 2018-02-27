@@ -1,0 +1,27 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+
+        android:inputType="textNoSuggestions"
+        android:key="admin_password"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:maxLength="32"
+        android:title="@string/pref_admin_password"
+        android:summary="@string/pref_admin_password_summary"/>
+
+    <EditTextPreference
+        android:inputType="textNoSuggestions"
+        android:key="ap_name"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:maxLength="32"
+        android:title="@string/pref_ap_name"
+        android:summary="@string/pref_ap_name_summary"/>
+    <CheckBoxPreference
+        android:title="@string/pref_show_welcome_tab"
+        android:defaultValue="true"
+        android:summary="@string/pref_show_welcome_tab_summary"
+        android:key="checkWelcome" />
+</PreferenceScreen>
