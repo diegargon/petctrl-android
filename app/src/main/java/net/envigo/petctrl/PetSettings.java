@@ -53,6 +53,13 @@ public class PetSettings  extends Fragment {
         return fragment;
 
     }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(false);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -142,6 +149,7 @@ public class PetSettings  extends Fragment {
 
     private void getClientList() {
 
+
         wifiUtils.getClientList(true, 300, new iScanListener() {
             @Override
             public void onFinishScan(ArrayList<PetClients> clients) {
@@ -157,8 +165,6 @@ public class PetSettings  extends Fragment {
                 //for (PetClients clientScanResult : clients) {
                 for (PetClients clientScanResult : clients) {
                     listAdapter.add(clientScanResult.getIpAddr());
-
-
                             /*
                             scanText.append("####################\n");
                             scanText.append("IpAddr: " + clientScanResult.getIpAddr() + "\n");
@@ -167,8 +173,9 @@ public class PetSettings  extends Fragment {
                             scanText.append("isReachable: " + clientScanResult.isReachable() + "\n");
                             */
                 }
-                //((MainActivity)getActivity()).addNewTab();
+                //((MainActivity)getActivity()).addClientTab();
                 petListView.setAdapter(listAdapter);
+
 
             }
         });
@@ -211,7 +218,7 @@ public class PetSettings  extends Fragment {
         conn.execute(conn_data);
     }
 
-    public class Conn extends ConnRest {
+    public class Conn extends ConnRest_old {
 
         Context context;
 
@@ -231,7 +238,7 @@ public class PetSettings  extends Fragment {
                     if (jsonObject.getString("status").equals("sucess")) {
                         scanBtn.performClick();
                     }
-                    Toast.makeText(context, jsonObject.getString("status"), Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(context, jsonObject.getString("status"), Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

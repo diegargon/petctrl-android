@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -20,54 +21,72 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by diego on 8/03/18.
+ * Created by diego on 24/02/18.
  */
 
-public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSONObject> {
 
-    private iConnResult<JSONObject> mCallBack;
-    //private Context mContext;
-    public Exception mException;
+class ConnRest_old extends AsyncTask<HashMap<String, String>, JSONObject, JSONObject> {
 
-    //public ConnRest(Context context, iConnResult callback) {
-    public ConnRest(iConnResult callback) {
-        mCallBack = callback;
-        //mContext = context;
+    //private static final String domain_uri = "https://envigo.net/inzone/";
+    private String server_uri = "https://zoners.envigo.net/";
+    private String method;
+    private String file_query;
+    //private Context context;
+   // private WeakReference<Context> activityContext;
+
+    public ConnRest_old(Context context) {
+       // activityContext = new WeakReference<>(context);
+    }
+
+
+    public void setServerURL(String url) {
+        this.server_uri = url;
+    }
+    public String getServerURL(String url) {
+        return url;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
+    }
+    public void setFileQuery(String query) {
+        this.file_query = query;
     }
 
     @Override
     protected JSONObject doInBackground(HashMap<String, String> ... params) {
-        Log.d("Log", "doInBackground execute");
-
         HttpURLConnection conn = null;
-        HashMap<String, String> conn_details = params[0];
-
-        String method = conn_details.get("method");
-        String location = conn_details.get("url");
-
-        URL url = setupURL(location);
-        if (url == null || method == null) {
-            Log.d("Log", "ConnRest Inbackground URL/Method null");
-            return null;
-        } else {
-            Log.d("Log", ": url ->" + url.toString());
-        }
-
+        Log.d("Log", "doInBackground execute");
         try {
+
+            URL url = setupURL();
+            if (url == null) {
+                return null;
+            }
+
             conn = (HttpURLConnection) url.openConnection();
             conn.setReadTimeout(10000);
             conn.setConnectTimeout(15000);
 
-            conn.setRequestMethod(method);
+            switch (method) {
+                case "POST":
+                    conn.setRequestMethod("POST");
+                    //break;
+                case "GET":
+                    conn.setRequestMethod("GET");
+                    //break;
+            }
+
             conn.setRequestProperty("Accept", "application/json");
             conn.setDoInput(true);
             conn.setDoOutput(true);
 
             conn.connect();
+            Log.d("Log", ": url ->" + url.toString());
 
-            String query = getPostDataString(params[1]);
+            String query = getPostDataString(params[0]);
 
-            Log.d("Log:", "ConnRest query" + query);
+            // mLog.d("ConnRest query", query);
             OutputStream os = conn.getOutputStream();
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
 
@@ -77,15 +96,7 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
             os.close();
 
             int status = conn.getResponseCode();
-
-            if (status == 404) {
-                Log.d("Log", "Conn status: 404");
-                return null;
-                //return null;
-
-            } else {
-                Log.d("Log", "Conn status: "+ status );
-            }
+            Log.d("Log", "Conn status: "+ status );
             //TODO: manage 404 response
             InputStream inputStream = conn.getInputStream();
 
@@ -93,6 +104,8 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
                 Log.d("Log", "Connrest->input stream return null");
                 conn.disconnect();
                 return null;
+            } else {
+                Log.d("Log", "Connrest->input tiene algo");
             }
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -100,50 +113,37 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
             String line;
             String result = "";
 
-            while ((line = reader.readLine()) != null) result += line;
+            while ((line = reader.readLine()) != null) {
+                result += line;
+            }
 
             inputStream.close();
             Log.d("Log", "ConnRest -> Info result" + result);
             conn.disconnect();
+            if(result.isEmpty()) {
+                return null;
+            }
+            JSONObject jsonResult = new JSONObject(result);
+            //mLog.d("ConnRest Resultado", jsonResult.toString(4));
 
-            if(result.isEmpty()) return null;
-
-            //JSONObject jsonResult = new JSONObject(result);
-            //Log.d("ConnRest Resultado", jsonResult.toString(4));
-            //return jsonResult;
-            return new JSONObject(result);
+            return jsonResult;
 
         } catch (Exception e) {
-            //Log.d("Log: Excep ConnRest Bg", e.getMessage());
-            //e.printStackTrace();
-            mException = e;
+            Log.d("Log: Excep ConnRest Bg", e.getMessage());
+            e.printStackTrace();
         }
-
-
         return null;
     }
 
-    @Override
-    protected void onPostExecute(JSONObject jsonObject) {
-        //super.onPostExecute(jsonObject);
-        if (mCallBack != null) {
-            if (mException == null) {
-                mCallBack.onSuccess(jsonObject);
-            } else {
-                mCallBack.onFailure(mException);
-            }
-        }
-    }
-
-    private URL setupURL(String location) {
+    protected URL setupURL() {
         URL url = null;
 
         try {
-            if (location.isEmpty()) {
+            if (file_query.isEmpty()) {
                 Log.d("Log: ", "Incorrect file_query");
                 return null;
             }
-            url = new URL(location);
+            url = new URL(server_uri + file_query);
 
         } catch(Exception e){
             e.printStackTrace();
@@ -168,5 +168,6 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
         Log.d("Log", "CONNSEND: " + result.toString());
         return result.toString();
     }
+
 
 }

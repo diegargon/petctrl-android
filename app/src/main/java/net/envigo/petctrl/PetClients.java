@@ -5,9 +5,15 @@ package net.envigo.petctrl;
  */
 
 public class PetClients {
+    private String Name = null;
+    private String ChipID = null;
+    private String PhoneNumber = null;
+    private int RSSI = 1;
     private String IpAddr;
     private String HWAddr;
     private String Device;
+
+
     private boolean isReachable;
 
     public PetClients(String ipAddr, String hWAddr, String device, boolean isReachable) {
@@ -17,6 +23,7 @@ public class PetClients {
         this.Device = device;
         this.isReachable = isReachable;
     }
+
 
     public String getIpAddr() {
         return IpAddr;
@@ -49,5 +56,14 @@ public class PetClients {
     public void setReachable(boolean isReachable) {
         this.isReachable = isReachable;
     }
+
+    public void setName(String name) { this.Name = name;}
+    public String getName() { return this.Name;}
+    public String getChip() { return this.ChipID;}
+    public void setChip(String chip) { this.ChipID = chip;}
+    public String getPhoneNumber() { return this.PhoneNumber;}
+    public void setPhoneNumber(String phone) { this.PhoneNumber = phone;}
+    public int getRSSI() { return this.RSSI;}
+    public void setRSSI(int rssi) { this.RSSI = rssi;}
 
 }

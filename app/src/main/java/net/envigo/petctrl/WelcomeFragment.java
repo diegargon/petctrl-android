@@ -13,14 +13,6 @@ import android.widget.Button;
 
 public class WelcomeFragment extends Fragment {
 
-    private Button btnScan;
-
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
 //    private OnFragmentInteractionListener mListener;
 
@@ -29,13 +21,6 @@ public class WelcomeFragment extends Fragment {
     }
 
     public static WelcomeFragment newInstance() {
-        //WelcomeFragment fragment = new WelcomeFragment();
-        //Bundle args = new Bundle();
-        //args.putString(ARG_PARAM1, param1);
-        //args.putString(ARG_PARAM2, param2);
-        //fragment.setArguments(args);
-
-        //return fragment;
         return new WelcomeFragment();
     }
 
@@ -52,20 +37,11 @@ public class WelcomeFragment extends Fragment {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_welcome, container, false);
 
-        btnScan = rootView.findViewById(R.id.btnScan);
-        btnScan.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ((MainActivity)getActivity()).getClientList();
-            }
-        });
-
 
         return rootView;
 
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
 
     }
