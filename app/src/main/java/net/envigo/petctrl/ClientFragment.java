@@ -1,8 +1,6 @@
 package net.envigo.petctrl;
 
-
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,40 +8,32 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import org.json.JSONObject;
-import org.w3c.dom.Text;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-
 
 public class ClientFragment extends Fragment {
 
     //Context context;
-
     View rootView;
-    PetClients client;
+    PetClients PetClient;
     ProgressBar RSSIBar;
-    int PetClient_pos;
+    String PetClientID;
     TextView txtView ;
     EditText edtPetName;
     EditText edtChipID;
     EditText edtPhone;
 
-
-    public static ClientFragment newInstance(int PetClient_pos) {
+    public static ClientFragment newInstance(String PetClientID) {
         ClientFragment fragment = new ClientFragment();
 
         Bundle args = new Bundle();
-        args.putInt("PetClient_pos", PetClient_pos);
+        args.putString("PetClientID", PetClientID);
         fragment.setArguments(args);
         return fragment;
     }
@@ -51,50 +41,40 @@ public class ClientFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //setRetainInstance(false);
+        setRetainInstance(true);
 
-/*
-        if (getArguments() != null && client == null ) {
-            PetClient_pos =  getArguments().getInt("PetClient_pos");
-            Log.d("Log", "Client on create position: " + PetClient_pos);
+        if (getArguments() != null && PetClient == null ) {
+            PetClientID =  getArguments().getString("PetClientID");
+            Log.d("Log", "Client on create position: " + PetClientID);
+
             if (((MainActivity)getActivity()).PetClientList.size() > 0) {
                 Log.d("Log","Clientfrag PEtList" + ((MainActivity)getActivity()).PetClientList.size() );
-                client = ((MainActivity) getActivity()).PetClientList.get(PetClient_pos);
+                PetClient = ((MainActivity) getActivity()).getClientByID(PetClientID);
             }
         }
-        */
-
     }
-
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         Log.d("Log", "ClientFrag onCreateView");
+
         rootView = inflater.inflate(R.layout.fragment_client, container, false);
-
-
         txtView = rootView.findViewById(R.id.txtStatus);
         edtPetName = rootView.findViewById(R.id.edtName);
         edtChipID = rootView.findViewById(R.id.edtChipID);
         edtPhone = rootView.findViewById(R.id.edtPhone);
         RSSIBar = rootView.findViewById(R.id.RSSIBar);
 
-
-        if (client != null) {
+        if (PetClient != null) {
             Log.d("Log","Client Farg *client* not null");
-            edtPetName.setText(client.getName());
-            edtChipID.setText(client.getChip());
-            edtPhone.setText(client.getPhoneNumber());
-            txtView.setText(client.getIpAddr());
-            setRSSI(client.getRSSI());
-
+            edtPetName.setText(PetClient.getName());
+            edtChipID.setText(PetClient.getChip());
+            edtPhone.setText(PetClient.getPhoneNumber());
+            txtView.setText(PetClient.getIpAddr());
+            setRSSI(PetClient.getRSSI());
         }
-
-
-
 
         ImageButton btnSave = rootView.findViewById(R.id.btnSave);
         //ImageButton btnTurnOff = rootView.findViewById(R.id.btnTurnOff);
@@ -157,7 +137,7 @@ public class ClientFragment extends Fragment {
                         switch (which){
                             case DialogInterface.BUTTON_POSITIVE:
                                 Log.d("Log", "Reboot button clicked");
-                                if (client == null) {
+                                if (PetClient == null) {
                                     Log.d("Log", "reboot fail client null");
                                     return;
                                 }
@@ -165,7 +145,7 @@ public class ClientFragment extends Fragment {
                                 HashMap<String, String> conn_data = new HashMap<>();
 
                                 conn_details.put("method", "POST");
-                                conn_details.put("url", "http://" + client.getIpAddr() + "/settings");
+                                conn_details.put("url", "http://" + PetClient.getIpAddr() + "/settings");
 
                                 String admin_pass = ((MainActivity) getActivity()).getAdminPassword();
                                 if (admin_pass == null) return;
@@ -210,8 +190,8 @@ public class ClientFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Log.d("Log", "Sound button clicked");
-                if (client == null) {
-                    Log.d("Log", "reboot fail client null");
+                if (PetClient == null) {
+                    Log.d("Log", "Petclient its NULL " + PetClientID);
                     return;
                 }
 
@@ -219,18 +199,22 @@ public class ClientFragment extends Fragment {
         });
 
         return rootView;
-
     }
 
-
     public void setupClient() {
-        Log.d("Log", "setupClient");
+        //Log.d("Log", "setupClient" + ((MainActivity)getActivity()).PetClientList.size());
 
-        edtPetName.setText(client.getName());
-        edtChipID.setText(client.getChip());
-        edtPhone.setText(client.getPhoneNumber());
-        txtView.setText(client.getIpAddr());
-        setRSSI(client.getRSSI());
+
+        if (PetClient != null) {
+            Log.d("Log", "Setup Client SUCCESS Petclient NOT NULL");
+            edtPetName.setText(PetClient.getName());
+            edtChipID.setText(PetClient.getChip());
+            edtPhone.setText(PetClient.getPhoneNumber());
+            txtView.setText(PetClient.getIpAddr());
+            setRSSI(PetClient.getRSSI());
+        } else {
+            Log.d("Log","Setup Client FAILED Petclient NULL");
+        }
 
     }
     @Override
@@ -248,18 +232,16 @@ public class ClientFragment extends Fragment {
 
     public void setRSSI(int RSSI) {
         RSSIBar.setProgress( (RSSI + 100) );
-
     }
 
     public void closeTab(){
-        ((MainActivity)getActivity()).PetClientList.remove(PetClient_pos);
+        //((MainActivity)getActivity()).PetClientList.remove(PetClient_pos);
+        ((MainActivity)getActivity()).removeClientByID(PetClientID);
         ((MainActivity)getActivity()).closeCurrentTab();
     }
 
     public void update () {
         Log.d("Log", "Clientfrag update called");
-
-
         //client = ((MainActivity)getActivity()).PetClientList.get(PetClient_pos);
     }
 }

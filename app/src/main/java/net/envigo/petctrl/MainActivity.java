@@ -1,74 +1,51 @@
 package net.envigo.petctrl;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
-
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-
 import java.util.HashMap;
 import java.util.List;
 
-
 public class MainActivity extends AppCompatActivity {
-
-    //private static final String TAG_RET_OVERVIEW = "OverviewFragment";
 
     //private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1001;
     protected SharedPreferences settings = null;
 
-    //private ArrayList<Fragment> TabFragmentList;
-    public ArrayList<String> tabTitles = new ArrayList<>();
-
-    private List<Fragment> tabFragments = new ArrayList<>();
-    int OverViewPos;
-
+    public List<Fragment> myFragments = new ArrayList<>();
+    private ArrayList<String> categories = new ArrayList<>();
     protected OverviewFragment OvFrag;
 
-
-
-
+    int OverViewPos;
     Context context;
 
-
     protected MyFragmentPageAdapter mSectionsPagerAdapter;
-
     private ViewPager mViewPager;
-
     private WifiUtils wifiUtils;
     protected TabLayout mTabLayout;
-
-    private String admin_password = null;
-    private String ap_name = null;
-
-
-
+    protected String admin_password = null;
+    protected String ap_name = null;
     private boolean ShowWelcome = true;
-
     protected ArrayList<PetClients> PetClientList = new ArrayList<>();
 
     @Override
@@ -86,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         admin_password = settings.getString("admin_password", null);
         ap_name = settings.getString("ap_name", null);
         ShowWelcome = settings.getBoolean("checkWelcome", true);
+        Log.d("Log", "Settings:" + admin_password + " " + ap_name);
 
         if (checkConfig(true)) {
             wifiUtils = new WifiUtils(context);
@@ -93,8 +71,8 @@ public class MainActivity extends AppCompatActivity {
 
             Log.d("Log", "Main, configuring user ap mode");
         }
-        if (savedInstanceState != null) {
 
+        if (savedInstanceState != null) {
             //ashOn = savedInstanceState.getBoolean("isFlashOn");
         }
         //prefs = getSharedPreferences(My_Prefs, MODE_PRIVATE);
@@ -102,9 +80,7 @@ public class MainActivity extends AppCompatActivity {
 
         setupTabs();
 
-
         requestPermissions();
-
     }
 
     public boolean checkConfig(boolean msg) {
@@ -128,8 +104,6 @@ public class MainActivity extends AppCompatActivity {
                 al abrir addnewtab y detectar nuevas clientes
                  */
                 ArrayList<PetClients> PetClientList_tmp = PetClientList;
-
-                //PetClientList = clients;
 
                 for (PetClients clientScanResult : clients) {
 
@@ -162,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                     newClient();
                 }
-
             }
 
         });
@@ -193,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
                             String RSSI = jsonObject.getString("RSSI");
                             client.setRSSI(Integer.parseInt(RSSI));
 
-                            addClientTab(client.getName(), PetClientList.size() -1);
+                            addClientTab(client.getName(), client.getIpAddr());
 
                         } else {
                             Toast.makeText(context, jsonObject.getString("msg"), Toast.LENGTH_SHORT).show();
@@ -201,11 +174,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
-
-
                 }
-
             }
 
             @Override
@@ -246,7 +215,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -259,18 +227,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-
     }
 
-
-
-    public class MyFragmentPageAdapter extends FragmentPagerAdapter {
+    public class MyFragmentPageAdapter extends FragmentStatePagerAdapter {
 
         //TODO: Ver para que funciona actualmente pos, por que no sirve para la posicion actual
         public  int pos = 0;
 
-        public List<Fragment> myFragments = new ArrayList<>();
-        private ArrayList<String> categories = new ArrayList<>();
         private Context context;
 
         //public MyFragmentPageAdapter(Context context, FragmentManager fm, List<Fragment> myFrags, ArrayList<String> cats) {
@@ -280,11 +243,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
+        public void setPrimaryItem(ViewGroup container, int position, Object object) {
+            super.setPrimaryItem(container, position, object);
+            //Log.d("Log", "SetprimartyItem called" + position + " " + container + " " + object);
+        }
+
+
+        @Override
         public Object instantiateItem(ViewGroup container, int position) {
             //return super.instantiateItem(container, position);
+            Log.d("Log", "instantiateItem called, position " + position);
+
+            /*
+            if(myInstantiateFragments.size() > position) {
+                Fragment f = myInstantiateFragments.get(position);
+                if (f != null) {
+                    Log.d("Log", "instatiate item reuse");
+                    return f;
+                }
+            }
+            */
+            Log.d("Log", "instatiate item new");
 
             Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
-
+            /*
             if (createdFragment instanceof OverviewFragment) {
                 OverviewFragment Overfrag = (OverviewFragment) createdFragment;
                 Overfrag.update();
@@ -293,12 +275,19 @@ public class MainActivity extends AppCompatActivity {
                 ClientFragment Clientfrag = (ClientFragment) createdFragment;
                 Clientfrag.update();
             }
+            */
+            //myFragments.set(position, new WeakReference<>(createdFragment));
 
-            Log.d("Log", "instantiateItem called, position " + position + "->" + createdFragment);
             myFragments.set(position, createdFragment);
-            tabFragments.set(position, createdFragment);
+
             return createdFragment;
 
+            /*
+
+            Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
+            myFragments.set(position, createdFragment);
+            return createdFragment;
+            */
         }
 
         @Override
@@ -306,22 +295,30 @@ public class MainActivity extends AppCompatActivity {
             Log.d("Log", "getItem adapter called " + position);
 
             return myFragments.get(position);
+        }
 
+        @Override
+        public int getItemPosition(@NonNull Object object) {
+
+            Log.d("Log","Main getItemPosition called" + object);
+            //return super.getItemPosition(object);
+            return mSectionsPagerAdapter.POSITION_NONE;
         }
 
         @Override
         public int getCount() {
-            //Log.d("Log", "getCount adapter called->" + myFragments.size());
+            Log.d("Log", "getCount adapter called->" + myFragments.size());
+
             return myFragments.size();
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
             //return super.getPageTitle(position);
-            //Log.d("Log", "getPageTitle adapter called" + position);
+            Log.d("Log", "getPageTitle adapter called" + position);
             setPos(position);
-            return categories.get(position);
 
+            return categories.get(position);
         }
 
         public int getPos() {
@@ -329,18 +326,47 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void addFragment(Fragment fragment, String title) {
-            Log.d("Log", "Frag: " +getCount() + " " + fragment);
-            myFragments.add( fragment);
-            tabFragments.add(fragment);
+            Log.d("Log", "addFragment: " +getCount() + " " + fragment);
+            //myFragments.add(new WeakReference<>(fragment));
+
+            myFragments.add(fragment);
             categories.add( title);
             mSectionsPagerAdapter.notifyDataSetChanged();
         }
         public void removeFragment(int position) {
             myFragments.remove(position);
-            tabFragments.remove(position);
             categories.remove(position);
             mSectionsPagerAdapter.notifyDataSetChanged();
+        }
 
+
+        @Override
+        public void finishUpdate(ViewGroup container) {
+            super.finishUpdate(container);
+            Log.d("Log", "frag finish Update Called");
+
+
+            /*
+            ArrayList<Fragment> update = new ArrayList<>();
+            for (int i=0, n=myFragments.size(); i < n; i++) {
+                Fragment f = myFragments.get(i);
+                if (f == null) continue;
+                int pos = getItemPosition(f);
+                while (update.size() <= pos) {
+                    update.add(null);
+                }
+                update.set(pos, f);
+            }
+            myFragments = update;
+            */
+
+        }
+
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            super.destroyItem(container, position, object);
+            Log.d("Log", "Destroy Item (Fragment) called");
+            //myFragments.set(position, null);
         }
 
         public void setPos(int pos) {
@@ -348,49 +374,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     void setupTabs() {
-
-//        tabTitles.add("Emparejar");
-
-        //tabFragments = buildFragments();
-        //Tabs
-
-//        mSectionsPagerAdapter = new MyFragmentPageAdapter(this ,getSupportFragmentManager(), tabFragments, tabTitles);
         mSectionsPagerAdapter = new MyFragmentPageAdapter(this ,getSupportFragmentManager());
         if (ShowWelcome) {
-            //tabTitles.add("Welcome");
             showWelcomeTab();
         }
 
         showOverviewTab();
-        //mSectionsPagerAdapter.addFragment(new WelcomeFragment(), "one");
-        //mSectionsPagerAdapter.addFragment(new PetSettings(), "two");
+
         mViewPager = findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
         mTabLayout = findViewById(R.id.tabLayout);
         mTabLayout.setupWithViewPager(mViewPager);
-
-
     }
-
-    /*
-    private List<Fragment> buildFragments() {
-        List<Fragment> fragments = new ArrayList<>();
-        for(int i = 0; i<tabTitles.size(); i++) {
-            Log.d("Log", "Tabsize:" + tabTitles.size() + "buildFragment loop->" + i);
-            Bundle b = new Bundle();
-            b.putInt("position", i);
-            if(i == 0) {
-                fragments.add(Fragment.instantiate(this, WelcomeFragment.class.getName(), b));
-            } else {
-                fragments.add(Fragment.instantiate(this, PetSettings.class.getName(), b));
-            }
-        }
-
-        return fragments;
-    }
-    */
 
     @Override
     protected void onStop() {
@@ -402,52 +398,49 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        /* TODO; Al salir de config tambien lo desabilita
+        Log.d("Log", "Main activity on destroy called");
+        /* TODO; Al salir de config tambien lo desabilita y no interesa, buscar otro modo de al salir desconectar
         if (wifiUtils != null) {
             wifiUtils.disableAP();
         }
         */
-
-        Log.d("Log", "Main activity on destroy called");
     }
 
-    public void addClientTab(String title, int PetClient_pos) {
-        Log.d("Log", "addclienttab:" + PetClient_pos);
+    private void showWelcomeTab() {
+        WelcomeFragment wf = new WelcomeFragment();
+        mSectionsPagerAdapter.addFragment(wf, "Bienvenido");
+    }
+
+    private void showOverviewTab() {
+        //Log.d("Log", "showOverviewTab called " + this);
+
+        OverViewPos = myFragments.size();
+        mSectionsPagerAdapter.addFragment(OverviewFragment.newInstance(), getString(R.string.overview));
+    }
+
+    public void addClientTab(String title, String PetClientID) {
+        Log.d("Log", "addclienttab:" + PetClientID);
         //mSectionsPagerAdapter.addFragment(new ClientFragment(), title);
-        ClientFragment PetClientFrag = ClientFragment.newInstance(PetClient_pos);
+        ClientFragment PetClientFrag = ClientFragment.newInstance(PetClientID);
         mSectionsPagerAdapter.addFragment(PetClientFrag, title);
         PetClientFrag.setupClient();
         overviewText();
     }
 
     private void showPairTab() {
-        //TODO: al dar dos veces salen dos pantallas
-        //PetSettings pf = new PetSettings();
-        //mSectionsPagerAdapter.addFragment(pf, "Emparejar");
-        mSectionsPagerAdapter.addFragment(PetSettings.newInstance(), "Emparejar");
-        mTabLayout.getTabAt(mSectionsPagerAdapter.getCount() ).select();
+        boolean frag_exists = false;
 
-    }
-    private void showWelcomeTab() {
-        WelcomeFragment wf = new WelcomeFragment();
-        mSectionsPagerAdapter.addFragment(wf, "Bienvenido");
-    }
-    private void showOverviewTab() {
-        //Log.d("Log", "showOverviewTab called " + this);
-/*
-        if(OverviewFragment == null) {
-            OverviewFragment = OverviewFragment.newInstance();
-            Log.d("Log", "Newinstance : " + OverviewFragment);
+        for(Fragment f : myFragments) {
+            if (f instanceof  PetSettings) {
+                frag_exists = true;
+            }
         }
-*/
-        OverviewFragment of = new OverviewFragment();
-
-        //OverviewFragment = new OverviewFragment();
-
-        //mSectionsPagerAdapter.addFragment(OverviewFragment.newInstance(), getString(R.string.overview));
-        OverViewPos = tabFragments.size();
-        mSectionsPagerAdapter.addFragment(of, getString(R.string.overview));
+        if(!frag_exists) {
+            mSectionsPagerAdapter.addFragment(PetSettings.newInstance(), getString(R.string.pair));
+            mTabLayout.getTabAt(mSectionsPagerAdapter.getCount() -1 ).select();
+        }
     }
+
     void requestPermissions() {
         //if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
 
@@ -457,14 +450,30 @@ public class MainActivity extends AppCompatActivity {
             if (!Settings.System.canWrite(getApplicationContext())) {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
                 startActivityForResult(intent, 200);
-
             }
-
         }
-
-
     }
 
+    public PetClients getClientByID(String ClientID) {
+        if (PetClientList != null) {
+            for (PetClients result : PetClientList) {
+                if (result.getIpAddr() == ClientID) {
+                    return result;
+                }
+            }
+        }
+        return null;
+    }
+    public void removeClientByID(String ClientID) {
+        if(PetClientList != null) {
+            for (PetClients result : PetClientList) {
+                if (result.getIpAddr() == ClientID) {
+                    Log.d("Log", "removeClientByID: "  + PetClientList.indexOf(result));
+                    PetClientList.remove(result);
+                }
+            }
+        }
+    }
     public void newClient() {
         overviewText();
     }
@@ -480,23 +489,21 @@ public class MainActivity extends AppCompatActivity {
             text += "\n";
         }
 
-        OverviewFragment fr = (OverviewFragment) tabFragments.get(OverViewPos);
+        OverviewFragment fr = (OverviewFragment) myFragments.get(OverViewPos);
         fr.setText(text);
-
     }
 
     protected String getAdminPassword() {
+        Log.d("Log", "Get admin password");
         return admin_password;
     }
+    protected String getApName() { return ap_name; };
 
     public void closeCurrentTab() {
-        int CurrentPos =  mSectionsPagerAdapter.getPos();
-        Log.d("Log", "Close tab called " + CurrentPos);
-//        mTabLayout.getTabAt(position -1 ).select();
+        int CurrentPos = mSectionsPagerAdapter.getPos();
+        //Log.d("Log", "Close tab called " + CurrentPos);
         mTabLayout.removeTabAt(CurrentPos);
         mSectionsPagerAdapter.removeFragment(CurrentPos);
-
         overviewText();
-
     }
 }

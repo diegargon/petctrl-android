@@ -30,7 +30,7 @@
     <string name="btnUpdate">Actualizar</string>
     <string name="btnHelp">Ayuda</string>
     <string name="btnClose">Cerrar</string>
-
+    <string name="pair">Emparejar</string>
 
     <!-- CLIENT TAB -->
     <string name="name">Nombre: </string>

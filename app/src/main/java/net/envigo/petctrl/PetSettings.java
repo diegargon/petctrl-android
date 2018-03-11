@@ -3,10 +3,7 @@ package net.envigo.petctrl;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
@@ -21,9 +18,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -45,10 +40,7 @@ public class PetSettings  extends Fragment {
 
     public static PetSettings newInstance() {
         PetSettings fragment = new PetSettings();
-        //Bundle args = new Bundle();
-        //args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-        //fragment.setArguments(args);
-        Log.d("Log", "newInstace called");
+        Log.d("Log", "Petsettings newInstance called");
 
         return fragment;
 
@@ -57,7 +49,7 @@ public class PetSettings  extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(false);
+        //setRetainInstance(false);
     }
 
     @Nullable
@@ -78,17 +70,11 @@ public class PetSettings  extends Fragment {
         closeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TabLayout tabLayout = ((MainActivity)getActivity()).mTabLayout;
-                MainActivity.MyFragmentPageAdapter mAdapter = ((MainActivity)getActivity()).mSectionsPagerAdapter;
-                if(tabLayout != null && mAdapter != null) {
-                    tabLayout.removeTabAt(mAdapter.getPos());
-                    mAdapter.removeFragment(mAdapter.getPos());
-                    mAdapter.notifyDataSetChanged();
-                }
+                TabLayout tabLayout = ((MainActivity) getActivity()).mTabLayout;
+                MainActivity.MyFragmentPageAdapter mAdapter = ((MainActivity) getActivity()).mSectionsPagerAdapter;
 
-                String admin_password = ((MainActivity)getActivity()).settings.getString("admin_password", null);
-                String ap_name = ((MainActivity)getActivity()).settings.getString("ap_name", null);
-
+                String admin_password = ((MainActivity)getActivity()).getAdminPassword();
+                String ap_name = ((MainActivity)getActivity()).getApName();
 
                 if (admin_password != null && ap_name != null && admin_password.length() >= 6 && ap_name.length() >= 4) {
                     WifiUtils wifi = new WifiUtils(context);
@@ -97,7 +83,14 @@ public class PetSettings  extends Fragment {
                 } else {
                     Toast.makeText(context, R.string.configNeed, Toast.LENGTH_SHORT).show();
                 }
+
+                if (tabLayout != null && mAdapter != null) {
+                    tabLayout.removeTabAt(mAdapter.getPos());
+                    mAdapter.removeFragment(mAdapter.getPos());
+                    mAdapter.notifyDataSetChanged();
+                }
             }
+
         });
 
         petListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -111,7 +104,7 @@ public class PetSettings  extends Fragment {
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        switch (which){
+                        switch (which) {
                             case DialogInterface.BUTTON_POSITIVE:
                                 assocClient(position);
                                 break;
@@ -129,7 +122,6 @@ public class PetSettings  extends Fragment {
                         .setNegativeButton(R.string.no, dialogClickListener).show();
             }
         });
-
 
         //wifiUtils.cfgDiscoveryAP();
         scanBtn.setOnClickListener(new View.OnClickListener()
@@ -149,7 +141,6 @@ public class PetSettings  extends Fragment {
 
     private void getClientList() {
 
-
         wifiUtils.getClientList(true, 300, new iScanListener() {
             @Override
             public void onFinishScan(ArrayList<PetClients> clients) {
@@ -159,24 +150,12 @@ public class PetSettings  extends Fragment {
                 scanText.setText("WifiApState: " + wifiUtils.getState() + "\n\n");
                 scanText.append("Clients: \n");
 
-                //PetClients clientScanResult
                 PetClientList = clients;
 
-                //for (PetClients clientScanResult : clients) {
                 for (PetClients clientScanResult : clients) {
                     listAdapter.add(clientScanResult.getIpAddr());
-                            /*
-                            scanText.append("####################\n");
-                            scanText.append("IpAddr: " + clientScanResult.getIpAddr() + "\n");
-                            scanText.append("Device: " + clientScanResult.getDevice() + "\n");
-                            scanText.append("HWAddr: " + clientScanResult.getHWAddr() + "\n");
-                            scanText.append("isReachable: " + clientScanResult.isReachable() + "\n");
-                            */
                 }
-                //((MainActivity)getActivity()).addClientTab();
                 petListView.setAdapter(listAdapter);
-
-
             }
         });
 
@@ -206,8 +185,9 @@ public class PetSettings  extends Fragment {
         conn.setMethod("POST");
         conn.setServerURL("http://" + client.getIpAddr() + "/");
         //conn.setServerURL("http://192.168.4.22/");
-        final String admin_password = ((MainActivity)getActivity()).settings.getString("admin_password", "false");
-        final String ap_name = ((MainActivity)getActivity()).settings.getString("ap_name", "false");
+
+        final String admin_password = ((MainActivity)getActivity()).getAdminPassword();
+        final String ap_name = ((MainActivity)getActivity()).getApName();
 
         if (admin_password.equals("false") || ap_name.equals("false")) { return; }
 
