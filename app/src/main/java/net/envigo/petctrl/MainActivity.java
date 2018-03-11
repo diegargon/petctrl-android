@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(JSONObject jsonObject) {
                 if (jsonObject == null) {
-                    Log.d("Log", "Success without response");
+                    Log.d("Log", "Success with null");
 
                 } else {
                     Log.d("Log", "Success" +  jsonObject.toString() );
@@ -231,13 +231,10 @@ public class MainActivity extends AppCompatActivity {
 
     public class MyFragmentPageAdapter extends FragmentStatePagerAdapter {
 
-        //TODO: Ver para que funciona actualmente pos, por que no sirve para la posicion actual
-        public  int pos = 0;
-
+        private  int pos = 0;
         private Context context;
 
-        //public MyFragmentPageAdapter(Context context, FragmentManager fm, List<Fragment> myFrags, ArrayList<String> cats) {
-        public MyFragmentPageAdapter(Context context, FragmentManager fm) {
+        private MyFragmentPageAdapter(Context context, FragmentManager fm) {
             super(fm);
             this.context = context;
         }
@@ -252,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public Object instantiateItem(ViewGroup container, int position) {
             //return super.instantiateItem(container, position);
-            Log.d("Log", "instantiateItem called, position " + position);
+            //Log.d("Log", "instantiateItem called, position " + position);
 
             /*
             if(myInstantiateFragments.size() > position) {
@@ -263,7 +260,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             */
-            Log.d("Log", "instatiate item new");
 
             Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
             /*
@@ -292,22 +288,21 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int position) {
-            Log.d("Log", "getItem adapter called " + position);
+            //Log.d("Log", "getItem adapter called " + position);
 
             return myFragments.get(position);
         }
 
         @Override
         public int getItemPosition(@NonNull Object object) {
-
-            Log.d("Log","Main getItemPosition called" + object);
+            //Log.d("Log","Main getItemPosition called" + object);
             //return super.getItemPosition(object);
             return mSectionsPagerAdapter.POSITION_NONE;
         }
 
         @Override
         public int getCount() {
-            Log.d("Log", "getCount adapter called->" + myFragments.size());
+            //Log.d("Log", "getCount adapter called->" + myFragments.size());
 
             return myFragments.size();
         }
@@ -315,17 +310,15 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public CharSequence getPageTitle(int position) {
             //return super.getPageTitle(position);
-            Log.d("Log", "getPageTitle adapter called" + position);
+            //Log.d("Log", "getPageTitle adapter called" + position);
             setPos(position);
 
             return categories.get(position);
         }
 
-        public int getPos() {
-            return pos;
-        }
 
-        public void addFragment(Fragment fragment, String title) {
+
+        protected void addFragment(Fragment fragment, String title) {
             Log.d("Log", "addFragment: " +getCount() + " " + fragment);
             //myFragments.add(new WeakReference<>(fragment));
 
@@ -333,7 +326,7 @@ public class MainActivity extends AppCompatActivity {
             categories.add( title);
             mSectionsPagerAdapter.notifyDataSetChanged();
         }
-        public void removeFragment(int position) {
+        protected void removeFragment(int position) {
             myFragments.remove(position);
             categories.remove(position);
             mSectionsPagerAdapter.notifyDataSetChanged();
@@ -344,7 +337,6 @@ public class MainActivity extends AppCompatActivity {
         public void finishUpdate(ViewGroup container) {
             super.finishUpdate(container);
             Log.d("Log", "frag finish Update Called");
-
 
             /*
             ArrayList<Fragment> update = new ArrayList<>();
@@ -369,7 +361,11 @@ public class MainActivity extends AppCompatActivity {
             //myFragments.set(position, null);
         }
 
-        public void setPos(int pos) {
+        protected int getPos() {
+            return pos;
+        }
+
+        protected void setPos(int pos) {
             mSectionsPagerAdapter.pos = pos;
         }
     }
@@ -399,11 +395,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.d("Log", "Main activity on destroy called");
-        /* TODO; Al salir de config tambien lo desabilita y no interesa, buscar otro modo de al salir desconectar
-        if (wifiUtils != null) {
-            wifiUtils.disableAP();
-        }
-        */
+
     }
 
     private void showWelcomeTab() {

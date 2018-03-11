@@ -1,11 +1,8 @@
 package net.envigo.petctrl;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
-
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStream;
@@ -77,16 +74,13 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
             os.close();
 
             int status = conn.getResponseCode();
-
+            //TODO: manage better 404 response
+            Log.d("Log", "Conn status: "+ status );
             if (status == 404) {
-                Log.d("Log", "Conn status: 404");
+                conn.disconnect();
                 return null;
-                //return null;
-
-            } else {
-                Log.d("Log", "Conn status: "+ status );
             }
-            //TODO: manage 404 response
+
             InputStream inputStream = conn.getInputStream();
 
             if (inputStream == null) {
@@ -136,7 +130,7 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
     }
 
     private URL setupURL(String location) {
-        URL url = null;
+        URL url;
 
         try {
             if (location.isEmpty()) {

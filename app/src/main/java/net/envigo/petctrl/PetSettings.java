@@ -34,9 +34,9 @@ public class PetSettings  extends Fragment {
     private TextView scanText;
     private ArrayAdapter<String> listAdapter ;
     private ListView petListView;
-    private Conn conn;
 
-    private ArrayList<PetClients> PetClientList;
+
+    private ArrayList<PetClients> PetClientAssocList;
 
     public static PetSettings newInstance() {
         PetSettings fragment = new PetSettings();
@@ -98,7 +98,7 @@ public class PetSettings  extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
                 Log.d("Log", "Item selected position " + position);
                 Log.d("Log", "Item: " + listAdapter.getItem(position));
-                PetClients client = PetClientList.get(position);
+                PetClients client = PetClientAssocList.get(position);
                 Log.d("Log", "" + client.getIpAddr());
 
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
@@ -150,7 +150,7 @@ public class PetSettings  extends Fragment {
                 scanText.setText("WifiApState: " + wifiUtils.getState() + "\n\n");
                 scanText.append("Clients: \n");
 
-                PetClientList = clients;
+                PetClientAssocList = clients;
 
                 for (PetClients clientScanResult : clients) {
                     listAdapter.add(clientScanResult.getIpAddr());
@@ -170,59 +170,49 @@ public class PetSettings  extends Fragment {
     }
 
     public void assocClient(final int position) {
-        final PetClients client = PetClientList.get(position);
+        final PetClients client = PetClientAssocList.get(position);
         Log.d("Log", "assocClient");
-
-        /*
-        PetClientList.remove(position);
-        listAdapter.remove(listAdapter.getItem(position));
-        listAdapter.notifyDataSetChanged();
-        */
-
-        conn = new Conn(context);
-
-        conn.setFileQuery("associate");
-        conn.setMethod("POST");
-        conn.setServerURL("http://" + client.getIpAddr() + "/");
-        //conn.setServerURL("http://192.168.4.22/");
 
         final String admin_password = ((MainActivity)getActivity()).getAdminPassword();
         final String ap_name = ((MainActivity)getActivity()).getApName();
 
         if (admin_password.equals("false") || ap_name.equals("false")) { return; }
 
+        HashMap<String, String> conn_details = new HashMap<>();
         HashMap<String, String> conn_data = new HashMap<>();
+
+        conn_details.put("method", "POST");
+        conn_details.put("url", "http://" + client.getIpAddr() + "/associate");
+
         conn_data.put("admin_password", admin_password);
         conn_data.put("ap_name", ap_name);
 
-        conn.execute(conn_data);
-    }
+        ConnRest conn = new ConnRest(new iConnResult() {
 
-    public class Conn extends ConnRest_old {
+            @Override
+            public void onSuccess(JSONObject jsonObject) {
+                if (jsonObject != null) {
 
-        Context context;
-
-        public Conn(Context context) {
-            super(context);
-            this.context = context;
-        }
-
-        @Override
-        protected void onPostExecute(JSONObject jsonObject) {
-            super.onPostExecute(jsonObject);
-            Log.d("Log", "Conn onPostExecute PetSettings called");
-
-            if (jsonObject != null) {
-
-                try {
-                    if (jsonObject.getString("status").equals("sucess")) {
-                        scanBtn.performClick();
+                    try {
+                        if (jsonObject.getString("status").equals("sucess")) {
+                            scanBtn.performClick();
+                        }
+                        Toast.makeText(context, jsonObject.getString("status"), Toast.LENGTH_SHORT).show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    //Toast.makeText(context, jsonObject.getString("status"), Toast.LENGTH_SHORT).show();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } else {
+                    Log.d("Log", "Success with null");
                 }
             }
-        }
+
+            @Override
+            public void onFailure(Exception e) {
+
+            }
+        });
+        conn.execute(conn_details, conn_data);
+
     }
+
 }
