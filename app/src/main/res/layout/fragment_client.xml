@@ -9,179 +9,214 @@
         android:layout_height="fill_parent"
         android:background="#ffffff">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-
-
         <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:orientation="horizontal">
+
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:paddingEnd="1dp"
+                    android:paddingStart="4dp">
+
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/txtName"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ems="4"
+                            android:text="@string/name" />
+
+                        <EditText
+                            android:id="@+id/edtName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ems="8"
+                            android:enabled="false"
+                            android:inputType="textPersonName"
+                            android:text="Name" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/txtPhone"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ems="4"
+                            android:text="@string/phone" />
+
+                        <EditText
+                            android:id="@+id/edtPhone"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ems="8"
+                            android:enabled="false"
+                            android:inputType="text|phone"
+                            android:text="Name" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/txtChipID"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ems="4"
+                            android:text="@string/ChipID" />
+
+                        <EditText
+                            android:id="@+id/edtChipID"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ems="8"
+                            android:enabled="false"
+                            android:inputType="textPersonName"
+                            android:text="Name" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:orientation="horizontal">
+
+                        <Switch
+                            android:id="@+id/swtSaveUnlock"
+                            android:layout_width="0dp"
+                            android:layout_gravity="center"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Editar" />
+
+
+                        <ImageButton
+                            android:id="@+id/btnSave"
+                            android:layout_width="60dp"
+                            android:layout_height="30dp"
+                            android:src="@android:drawable/ic_menu_save" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                <ImageView
+                    android:id="@+id/clientPhoto"
+                    android:layout_width="130dp"
+                    android:layout_height="150dp"
+                    android:layout_weight="1"
+                    android:src="@android:drawable/btn_star" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="30dp"
+                    android:layout_weight="1"
+                    android:gravity=""
                     android:orientation="horizontal">
+
 
                     <ProgressBar
                         android:id="@+id/RSSIBar"
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:max="100"
-                        android:scaleY="3"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:max="70"
                         android:progress="1"
-                        android:layout_weight="1" />
+                        android:scaleY="6" />
 
-                </LinearLayout>
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
                     <TextView
-                        android:id="@+id/txtName"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/RSSIText"
+                        android:layout_width="30dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:ems="8"
-                        android:text="@string/name" />
-                    <EditText
-                        android:id="@+id/edtName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:ems="8"
-                        android:inputType="textPersonName"
-                        android:text="Name" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-                    <TextView
-                        android:id="@+id/txtPhone"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:ems="8"
-                        android:text="@string/phone" />
-                    <EditText
-                        android:id="@+id/edtPhone"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:ems="8"
-                        android:inputType="textPersonName"
-                        android:text="Name" />
-
-                </LinearLayout>
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-                    <TextView
-                        android:id="@+id/txtChipID"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:ems="8"
-                        android:text="@string/ChipID" />
-                    <EditText
-                        android:id="@+id/edtChipID"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:ems="8"
-                        android:inputType="textPersonName"
-                        android:text="Name" />
-
+                        android:ems="4"
+                        android:text="" />
                 </LinearLayout>
 
 
             </LinearLayout>
 
-
-            <ImageView
-                android:id="@+id/clientPhoto"
-                android:layout_width="250dp"
-                android:layout_height="150dp"
-                android:layout_weight="1"
-                android:src="@android:drawable/btn_star" />
-
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-
-            android:orientation="horizontal">
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:text="A la desconexion"/>
-            <Spinner
-                android:id="@+id/spinner"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btnLights"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:layout_weight="1"
+                    android:src="@android:drawable/presence_offline" />
+
+                <ImageButton
+                    android:id="@+id/btnSound"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:layout_weight="1"
+                    android:src="@android:drawable/presence_offline" />
+
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_gravity="center_vertical"
                 android:layout_height="wrap_content"
-                android:entries="@array/desconn_list"
-                />
+                android:orientation="horizontal">
 
+                <ImageButton
+                    android:id="@+id/btnVibration"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:layout_weight="1"
+                    android:src="@android:drawable/presence_offline" />
 
-            <ImageButton
-                android:id="@+id/btnSave"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:src="@android:drawable/presence_offline" />
-
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnLights"
-                android:layout_width="match_parent"
-                android:layout_height="90dp"
-                android:layout_weight="1"
-                android:src="@android:drawable/presence_offline" />
-            <ImageButton
-                android:id="@+id/btnSound"
-                android:layout_width="match_parent"
-                android:layout_height="90dp"
-                android:layout_weight="1"
-                android:src="@android:drawable/presence_offline" />
-
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnVibration"
-                android:layout_width="match_parent"
-                android:layout_weight="1"
-                android:layout_height="90dp"
-                android:src="@android:drawable/presence_offline" />
-
-            <ImageButton
-                android:id="@+id/btnReboot"
-                android:layout_width="match_parent"
-                android:layout_height="90dp"
-                android:layout_weight="1"
-                android:src="@android:drawable/presence_offline" />
-<!--
+                <ImageButton
+                    android:id="@+id/btnReboot"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:layout_weight="1"
+                    android:src="@android:drawable/presence_offline" />
+                <!--
             <ImageButton
                 android:id="@+id/btnTurnOff"
                 android:layout_width="match_parent"
@@ -189,9 +224,9 @@
                 android:layout_height="90dp"
                 android:src="@android:drawable/presence_offline" />
 -->
-        </LinearLayout>
+            </LinearLayout>
 
-<!--
+            <!--
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="100dp">
@@ -215,13 +250,13 @@
         </LinearLayout>
         -->
 
-        <!-- Avoid Scroll bottom problem -->
-        <TextView
-            android:id="@+id/txtStatus"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:text="" />
-    </LinearLayout>
+            <!-- Avoid Scroll bottom problem -->
+            <TextView
+                android:id="@+id/txtStatus"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="" />
+        </LinearLayout>
 
 
     </ScrollView>

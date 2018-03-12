@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -30,6 +31,8 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     //private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1001;
+    private final static boolean DEBUG = false;
+
     protected SharedPreferences settings = null;
 
     public List<Fragment> myFragments = new ArrayList<>();
@@ -45,13 +48,17 @@ public class MainActivity extends AppCompatActivity {
     protected TabLayout mTabLayout;
     protected String admin_password = null;
     protected String ap_name = null;
+
     private boolean ShowWelcome = true;
     protected ArrayList<PetClients> PetClientList = new ArrayList<>();
+
+    private Handler mHandler;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("Log", "MainActivity onCreate called" + this);
+        if (DEBUG) Log.d("Log", "MainActivity onCreate called" + this);
         setContentView(R.layout.activity_main);
 
         context = getApplicationContext();
@@ -63,13 +70,15 @@ public class MainActivity extends AppCompatActivity {
         admin_password = settings.getString("admin_password", null);
         ap_name = settings.getString("ap_name", null);
         ShowWelcome = settings.getBoolean("checkWelcome", true);
-        Log.d("Log", "Settings:" + admin_password + " " + ap_name);
+
+
+        if (DEBUG) Log.d("Log", "Settings:" + admin_password + " " + ap_name);
 
         if (checkConfig(true)) {
             wifiUtils = new WifiUtils(context);
             wifiUtils.cfgAP(ap_name, admin_password);
 
-            Log.d("Log", "Main, configuring user ap mode");
+            if (DEBUG) Log.d("Log", "Main, configuring user ap mode");
         }
 
         if (savedInstanceState != null) {
@@ -81,7 +90,21 @@ public class MainActivity extends AppCompatActivity {
         setupTabs();
 
         requestPermissions();
+
+        //mHandler = new Handler();
+        //mHandler.post(runnableCode);
     }
+
+    private Runnable runnableCode = new Runnable() {
+        int i = 0;
+        @Override
+        public void run() {
+            i++;
+            Log.d("Log", "Mainactivity: Called runnableCode " + i);
+            // Repeat this the same runnable code block again another 2 seconds
+            mHandler.postDelayed(runnableCode, 2000);
+        }
+    };
 
     public boolean checkConfig(boolean msg) {
         if (admin_password != null && ap_name != null && admin_password.length() >= 6 && ap_name.length() >= 4) {
@@ -92,14 +115,17 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
+
     public void getClientList() {
+
+        if (DEBUG) Log.d("Log", "Main: getClientList called");
         if(wifiUtils == null)
             return;
 
         wifiUtils.getClientList(true, 300, new iScanListener() {
             @Override
             public void onFinishScan(ArrayList<PetClients> clients) {
-
+                if (DEBUG) Log.d("Log", "MAIN getClientList onFinishScan " );
                 /* Trabajamos sobre _tmp para poder asignar la nueva lista para que no de error
                 al abrir addnewtab y detectar nuevas clientes
                  */
@@ -113,28 +139,25 @@ public class MainActivity extends AppCompatActivity {
                         for (PetClients result : PetClientList_tmp) {
 
                             if (result.getHWAddr().equals(clientScanResult.getHWAddr())) {
-
+                                if (DEBUG) Log.d("Log", "MAIN Petclientlist exists " );
                                 coincidence = true;
 
-                            } else {
-                                //Log.d("Log", "Petclientlist exists " );
                             }
                         }
                         if (!coincidence) {
-                            //Log.d("Log", "Petclientlist not exists ");
+                            if (DEBUG) Log.d("Log", "Main Petclientlist not exists ");
                             PetClientList.add(clientScanResult);
-                            Log.d("Log", "assgined slot client" + PetClientList.size());
+                            if (DEBUG) Log.d("Log", "Main assigned slot client" + PetClientList.size());
                             get_client_info(clientScanResult);
 
                         }
                     } else {
-                        //Log.d("Log", "Petclientlist first ");
                         PetClientList.add(clientScanResult);
-                        Log.d("Log", "assgined slot client" + PetClientList.size());
+                        if (DEBUG) Log.d("Log", "Main assigned slot client" + PetClientList.size());
                         get_client_info(clientScanResult);
 
                     }
-                    newClient();
+                    OverviewUpdate();
                 }
             }
 
@@ -142,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void get_client_info(final PetClients client) {
+        if (DEBUG) Log.d("Log", "Main: Get client info called");
         HashMap<String, String> conn_details = new HashMap<>();
         HashMap<String, String> conn_data = new HashMap<>();
 
@@ -154,10 +178,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(JSONObject jsonObject) {
                 if (jsonObject == null) {
-                    Log.d("Log", "Success with null");
+                    if (DEBUG) Log.d("Log", "MAIN Success with null");
 
                 } else {
-                    Log.d("Log", "Success" +  jsonObject.toString() );
+                    if (DEBUG) Log.d("Log", "MAIN Success" +  jsonObject.toString() );
                     try {
                         if (jsonObject.getString("status").equals("ok")) {
                             client.setName(jsonObject.getString("name"));
@@ -179,8 +203,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Exception e) {
-                Log.d("Log", "Conn OnFail: " + e.getMessage());
-                //TODO: Borrar PetclientList item failed que metimos en getclientlist si la conexion falla
+                if (DEBUG) Log.d("Log", "MAIN Conn OnFail: " + e.getMessage());
+                removeClientByID(client.getIpAddr());
             }
         });
 
@@ -251,39 +275,13 @@ public class MainActivity extends AppCompatActivity {
             //return super.instantiateItem(container, position);
             //Log.d("Log", "instantiateItem called, position " + position);
 
-            /*
-            if(myInstantiateFragments.size() > position) {
-                Fragment f = myInstantiateFragments.get(position);
-                if (f != null) {
-                    Log.d("Log", "instatiate item reuse");
-                    return f;
-                }
-            }
-            */
 
             Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
-            /*
-            if (createdFragment instanceof OverviewFragment) {
-                OverviewFragment Overfrag = (OverviewFragment) createdFragment;
-                Overfrag.update();
-            }
-            if (createdFragment instanceof  ClientFragment) {
-                ClientFragment Clientfrag = (ClientFragment) createdFragment;
-                Clientfrag.update();
-            }
-            */
+
             //myFragments.set(position, new WeakReference<>(createdFragment));
-
             myFragments.set(position, createdFragment);
 
             return createdFragment;
-
-            /*
-
-            Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
-            myFragments.set(position, createdFragment);
-            return createdFragment;
-            */
         }
 
         @Override
@@ -310,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public CharSequence getPageTitle(int position) {
             //return super.getPageTitle(position);
-            //Log.d("Log", "getPageTitle adapter called" + position);
+            //if (DEBUG) Log.d("Log", "MAIN getPageTitle adapter called" + position);
             setPos(position);
 
             return categories.get(position);
@@ -319,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         protected void addFragment(Fragment fragment, String title) {
-            Log.d("Log", "addFragment: " +getCount() + " " + fragment);
+            if (DEBUG) Log.d("Log", "MAIN addFragment: " +getCount() + " " + fragment);
             //myFragments.add(new WeakReference<>(fragment));
 
             myFragments.add(fragment);
@@ -336,28 +334,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void finishUpdate(ViewGroup container) {
             super.finishUpdate(container);
-            Log.d("Log", "frag finish Update Called");
-
-            /*
-            ArrayList<Fragment> update = new ArrayList<>();
-            for (int i=0, n=myFragments.size(); i < n; i++) {
-                Fragment f = myFragments.get(i);
-                if (f == null) continue;
-                int pos = getItemPosition(f);
-                while (update.size() <= pos) {
-                    update.add(null);
-                }
-                update.set(pos, f);
-            }
-            myFragments = update;
-            */
-
+            //if (DEBUG) Log.d("Log", "MAIN frag finish Update Called");
         }
 
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
-            Log.d("Log", "Destroy Item (Fragment) called");
+            //if (DEBUG) Log.d("Log", "MAIN Destroy Item (Fragment) called");
             //myFragments.set(position, null);
         }
 
@@ -387,14 +370,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d("Log", "Main onStop called");
+        if (DEBUG) Log.d("Log", "Main onStop called");
     }
 
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d("Log", "Main activity on destroy called");
+        if (DEBUG) Log.d("Log", "Main activity on destroy called");
 
     }
 
@@ -411,12 +394,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void addClientTab(String title, String PetClientID) {
-        Log.d("Log", "addclienttab:" + PetClientID);
+        if (DEBUG)     Log.d("Log", "MAIN addclienttab:" + PetClientID);
         //mSectionsPagerAdapter.addFragment(new ClientFragment(), title);
         ClientFragment PetClientFrag = ClientFragment.newInstance(PetClientID);
         mSectionsPagerAdapter.addFragment(PetClientFrag, title);
         PetClientFrag.setupClient();
-        overviewText();
+        OverviewUpdate();
     }
 
     private void showPairTab() {
@@ -457,45 +440,72 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
     public void removeClientByID(String ClientID) {
+        if (DEBUG) Log.d("Log", "MAIN removeClientByID called");
         if(PetClientList != null) {
             for (PetClients result : PetClientList) {
                 if (result.getIpAddr() == ClientID) {
-                    Log.d("Log", "removeClientByID: "  + PetClientList.indexOf(result));
+                    if (DEBUG) Log.d("Log", "MAIN removeClientByID: "  + PetClientList.indexOf(result) + " ip: " + ClientID);
                     PetClientList.remove(result);
+                    OverviewUpdate();
                 }
             }
         }
-    }
-    public void newClient() {
-        overviewText();
+
     }
 
-    public void overviewText () {
-        Log.d("Log","overviewText main");
-        String text = "Clientes: " + PetClientList.size() + "\n";
 
-        for (PetClients clientScanResult : PetClientList) {
-            text += "Nombre: " + clientScanResult.getName();
-            text += " Online: ";
-            text += clientScanResult.isReachable() ? "Si" : "No";
-            text += "\n";
+    public void OverviewUpdate () {
+        if (DEBUG)  Log.d("Log","MAIN overview update");
+
+        int num_clients = PetClientList.size();
+        String client_details = "";
+
+        //String text += "Clientes: " + PetClientList.size() + "\n";
+
+        if (num_clients > 0) {
+            for (PetClients client : PetClientList) {
+                if (client.getName() != null) {
+                    client_details += "Nombre: " + client.getName();
+                    client_details += " Online: ";
+                    client_details += client.isReachable() ? "Si" : "No";
+                    client_details += "\n";
+                } else {
+                    num_clients -= 1;
+                }
+            }
+        } else {
+            return;
         }
+        String text = "Clientes: " + num_clients + "\n";
+        text += client_details;
 
         OverviewFragment fr = (OverviewFragment) myFragments.get(OverViewPos);
         fr.setText(text);
     }
 
     protected String getAdminPassword() {
-        Log.d("Log", "Get admin password");
+        if (DEBUG) Log.d("Log", "MAIN Get admin password");
         return admin_password;
     }
     protected String getApName() { return ap_name; };
 
-    public void closeCurrentTab() {
+    public void closeCurrentTab(Fragment frag) {
         int CurrentPos = mSectionsPagerAdapter.getPos();
-        //Log.d("Log", "Close tab called " + CurrentPos);
+        //if (DEBUG) Log.d("Log", "MAIN Close tab called " + CurrentPos);
+
+        if (frag instanceof ClientFragment) {
+            ClientFragment clientfr = (ClientFragment) frag;
+            removeClientByID(clientfr.PetClientID);
+        }
         mTabLayout.removeTabAt(CurrentPos);
         mSectionsPagerAdapter.removeFragment(CurrentPos);
-        overviewText();
+
+    }
+
+    public int getSensProgress() {
+        OverviewFragment fr = (OverviewFragment) myFragments.get(OverViewPos);
+        int sens = fr.getSensBarProgress();
+
+        return sens;
     }
 }

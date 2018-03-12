@@ -12,9 +12,7 @@ public class PetClients {
     private String IpAddr;
     private String HWAddr;
     private String Device;
-
-
-    private boolean isReachable;
+    private boolean isReachable = false;
 
     public PetClients(String ipAddr, String hWAddr, String device, boolean isReachable) {
         super();

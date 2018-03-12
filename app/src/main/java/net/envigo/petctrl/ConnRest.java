@@ -22,6 +22,8 @@ import java.util.Map;
 
 public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSONObject> {
 
+    final private boolean DEBUG = false;
+
     private iConnResult<JSONObject> mCallBack;
     //private Context mContext;
     public Exception mException;
@@ -34,7 +36,9 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
 
     @Override
     protected JSONObject doInBackground(HashMap<String, String> ... params) {
-        Log.d("Log", "doInBackground execute");
+        if(DEBUG) Log.d("Log", "doInBackground execute");
+
+
 
         HttpURLConnection conn = null;
         HashMap<String, String> conn_details = params[0];
@@ -44,16 +48,16 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
 
         URL url = setupURL(location);
         if (url == null || method == null) {
-            Log.d("Log", "ConnRest Inbackground URL/Method null");
+            if(DEBUG) Log.d("Log", "ConnRest Inbackground URL/Method null");
             return null;
         } else {
-            Log.d("Log", ": url ->" + url.toString());
+            if(DEBUG) Log.d("Log", ": url ->" + url.toString());
         }
 
         try {
             conn = (HttpURLConnection) url.openConnection();
-            conn.setReadTimeout(10000);
-            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(8000);
+            conn.setConnectTimeout(3000);
 
             conn.setRequestMethod(method);
             conn.setRequestProperty("Accept", "application/json");
@@ -64,7 +68,7 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
 
             String query = getPostDataString(params[1]);
 
-            Log.d("Log:", "ConnRest query" + query);
+            if(DEBUG) Log.d("Log:", "ConnRest query" + query);
             OutputStream os = conn.getOutputStream();
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
 
@@ -75,7 +79,7 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
 
             int status = conn.getResponseCode();
             //TODO: manage better 404 response
-            Log.d("Log", "Conn status: "+ status );
+            if(DEBUG)  Log.d("Log", "Conn status: "+ status );
             if (status == 404) {
                 conn.disconnect();
                 return null;
@@ -84,7 +88,7 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
             InputStream inputStream = conn.getInputStream();
 
             if (inputStream == null) {
-                Log.d("Log", "Connrest->input stream return null");
+                if(DEBUG) Log.d("Log", "Connrest->input stream return null");
                 conn.disconnect();
                 return null;
             }
@@ -97,7 +101,7 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
             while ((line = reader.readLine()) != null) result += line;
 
             inputStream.close();
-            Log.d("Log", "ConnRest -> Info result" + result);
+            if(DEBUG)  Log.d("Log", "ConnRest -> Info result" + result);
             conn.disconnect();
 
             if(result.isEmpty()) return null;
@@ -108,7 +112,7 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
             return new JSONObject(result);
 
         } catch (Exception e) {
-            //Log.d("Log: Excep ConnRest Bg", e.getMessage());
+            if(DEBUG)  Log.d("Log: Excep ConnRest Bg", e.getMessage());
             //e.printStackTrace();
             mException = e;
         }
@@ -134,7 +138,7 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
 
         try {
             if (location.isEmpty()) {
-                Log.d("Log: ", "Incorrect file_query");
+                if(DEBUG) Log.d("Log: ", "Incorrect file_query");
                 return null;
             }
             url = new URL(location);
@@ -159,7 +163,7 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
             result.append("=");
             result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
         }
-        Log.d("Log", "CONNSEND: " + result.toString());
+        if (DEBUG) Log.d("Log", "CONNSEND: " + result.toString());
         return result.toString();
     }
 

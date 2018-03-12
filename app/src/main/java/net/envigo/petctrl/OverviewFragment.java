@@ -1,27 +1,38 @@
 package net.envigo.petctrl;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 public class OverviewFragment extends Fragment {
 
+    private static final boolean DEBUG = true;
+
+    protected SharedPreferences settings;
+
+    private Context context;
     public Button btnScan;
     public TextView txtOverview;
     private View rootView;
+    private int sensBarProgress;
+    private SeekBar sensBar;
+
 
     public OverviewFragment() {
         // Required empty public constructor
     }
 
     public static OverviewFragment newInstance() {
-       // Log.d("Log","OverviewFragment new instance");
+       // if (DEBUG) Log.d("Log","OverviewFragment new instance");
         OverviewFragment fragment = new OverviewFragment();
 
         return fragment;
@@ -30,18 +41,25 @@ public class OverviewFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("Log", "OverviewFragment onCreate");
+        if (DEBUG) Log.d("Log", "OverviewFragment onCreate");
         //setRetainInstance(false);
+
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        //Log.d("Log", "Over frag onCreateView");
+        if (DEBUG) Log.d("Log", "Overviewfrag onCreateView");
 
         rootView = inflater.inflate(R.layout.fragment_overview, container, false);
         txtOverview = rootView.findViewById(R.id.txtOverview);
         btnScan = rootView.findViewById(R.id.btnScan);
+        sensBar = rootView.findViewById(R.id.sensBar);
+
+        settings = PreferenceManager.getDefaultSharedPreferences(context);
+        sensBar.setProgress(settings.getInt("sensWarning", 1));
+
 
         btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -55,7 +73,7 @@ public class OverviewFragment extends Fragment {
         if (((MainActivity)getActivity()).checkConfig(false) == false) {
             btnScan.setEnabled(false);
         } else {
-            //Log.d("Log", "Overview performClick onCreateView");
+            //if (DEBUG)  Log.d("Log", "Overviewfrag performClick onCreateView");
             btnScan.performClick();
         }
 
@@ -65,25 +83,38 @@ public class OverviewFragment extends Fragment {
     public  void setText(String text) {
         //txtOverview = rootView.findViewById(R.id.txtOverview);
         if (txtOverview != null) { //TODO: Al rotar la pantalla es null y peta
-            Log.d("Log", "SetText OVerview called " +this);
+            if (DEBUG) Log.d("Log", "Overviewfrag SetText txtOVerview  not null ");
             txtOverview.setText(text);
         } else {
-            Log.d("Log", "SetText OVerview NOT called " + this);
+            if (DEBUG) Log.d("Log", "Overviewfarg SetText  txtOverview null");
         }
     }
 
     public void update() {
         if (btnScan != null) {
-            //Log.d("Log", "UPDATE CLICK");
+            //if (DEBUG) Log.d("Log", "Overviewfrag UPDATE CLICK");
             btnScan.performClick();
         } else {
-            //Log.d("Log", "UPDATE NOCLICK");
+            //if (DEBUG) Log.d("Log", "Overviewfrag UPDATE NOCLICK");
         }
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        //Log.d("Log", "OnAttach OVerview Frag");
+        //if (DEBUG) Log.d("Log", "Overviewfrag OnAttach");
+        this.context = context;
     }
+
+    public int getSensBarProgress () {
+        sensBarProgress = sensBar.getProgress();
+        if (sensBarProgress != settings.getInt("sensWarning", 1)) {
+            SharedPreferences.Editor editPrefs = settings.edit();
+            editPrefs.putInt("sensWarning", sensBarProgress);
+            editPrefs.apply();
+        }
+
+        return sensBarProgress;
+    }
+
 }

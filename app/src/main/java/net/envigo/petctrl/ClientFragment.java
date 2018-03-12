@@ -1,17 +1,22 @@
 package net.envigo.petctrl;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Vibrator;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import org.json.JSONObject;
@@ -19,15 +24,27 @@ import java.util.HashMap;
 
 public class ClientFragment extends Fragment {
 
-    //Context context;
+    private final boolean DEBUG = true;
+    private boolean saveEnable = false;
+    Context context;
     View rootView;
     PetClients PetClient;
     ProgressBar RSSIBar;
-    String PetClientID;
+    public String PetClientID;
     TextView txtView ;
+    TextView RSSIText;
     EditText edtPetName;
     EditText edtChipID;
     EditText edtPhone;
+
+
+    HashMap<String, String> conn_details = new HashMap<>();
+    HashMap<String, String> conn_data = new HashMap<>();
+
+    String admin_pass;
+
+    Handler mHandler = new Handler();
+
 
     public static ClientFragment newInstance(String PetClientID) {
         ClientFragment fragment = new ClientFragment();
@@ -45,36 +62,110 @@ public class ClientFragment extends Fragment {
 
         if (getArguments() != null && PetClient == null ) {
             PetClientID =  getArguments().getString("PetClientID");
-            Log.d("Log", "Client on create position: " + PetClientID);
+            if (DEBUG) Log.d("Log", "Client on create position: " + PetClientID);
 
             if (((MainActivity)getActivity()).PetClientList.size() > 0) {
-                Log.d("Log","Clientfrag PEtList" + ((MainActivity)getActivity()).PetClientList.size() );
+                if (DEBUG) Log.d("Log","Clientfrag PEtList" + ((MainActivity)getActivity()).PetClientList.size() );
                 PetClient = ((MainActivity) getActivity()).getClientByID(PetClientID);
             }
         }
+
+        admin_pass = ((MainActivity) getActivity()).getAdminPassword();
+
+        if (admin_pass != null) {
+            conn_details.put("method", "POST");
+            conn_details.put("url", "http://" + PetClient.getIpAddr() + "/client_info");
+            conn_data.put("admin_password", admin_pass);
+
+            mHandler = new Handler();
+            mHandler.post(runnableCode);
+        }
+    }
+
+
+    private Runnable runnableCode = new Runnable() {
+        int i = 0;
+        @Override
+        public void run() {
+            i++;
+            //Log.d("Log", "ClientFag: Called runnableCode " + i);
+
+            ConnRest conn = new ConnRest(new iConnResult() {
+                @Override
+                public void onSuccess(JSONObject jsonObject) {
+                    //if (DEBUG) Log.d("Log", "Clientfrag refresh success");
+
+                    try {
+                        if (jsonObject.getString("status").equals("ok")) {
+                            String RSSI = jsonObject.getString("RSSI");
+                            PetClient.setRSSI(Integer.parseInt(RSSI));
+                            clientUpdate();
+                        } else {
+                            if (DEBUG) Log.d("Log", "Clientfrag refresh status notOK");
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    if (DEBUG) Log.d("Log", "Clientfrag NO refresh");
+                    PetClient.setRSSI(-100);
+                    clientUpdate();
+                }
+            });
+            conn.execute(conn_details, conn_data);
+
+
+
+            mHandler.postDelayed(runnableCode, 5000);
+        }
+    };
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        Log.d("Log", "Client frag onDetach");
+        mHandler.removeCallbacks(runnableCode);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        Log.d("Log", "ClientFrag onCreateView");
+        if (DEBUG) Log.d("Log", "ClientFrag onCreateView");
 
         rootView = inflater.inflate(R.layout.fragment_client, container, false);
         txtView = rootView.findViewById(R.id.txtStatus);
+        RSSIText = rootView.findViewById(R.id.RSSIText);
+
         edtPetName = rootView.findViewById(R.id.edtName);
         edtChipID = rootView.findViewById(R.id.edtChipID);
         edtPhone = rootView.findViewById(R.id.edtPhone);
         RSSIBar = rootView.findViewById(R.id.RSSIBar);
 
+
         if (PetClient != null) {
-            Log.d("Log","Client Farg *client* not null");
+            if (DEBUG) Log.d("Log","Client Farg *client* not null");
             edtPetName.setText(PetClient.getName());
             edtChipID.setText(PetClient.getChip());
             edtPhone.setText(PetClient.getPhoneNumber());
             txtView.setText(PetClient.getIpAddr());
             setRSSI(PetClient.getRSSI());
         }
+
+        Switch switchSave = rootView.findViewById(R.id.swtSaveUnlock);
+
+        switchSave.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                edtPetName.setEnabled(isChecked);
+                edtChipID.setEnabled(isChecked);
+                edtPhone.setEnabled(isChecked);
+                saveEnable = isChecked;
+            }
+        });
 
         ImageButton btnSave = rootView.findViewById(R.id.btnSave);
         //ImageButton btnTurnOff = rootView.findViewById(R.id.btnTurnOff);
@@ -87,14 +178,14 @@ public class ClientFragment extends Fragment {
         btnLights.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("Log", "Light button clicked");
+                if (DEBUG)  Log.d("Log", "Light button clicked");
             }
         });
 
         photo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getActivity(), "Clicked image", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Clicked image", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -106,16 +197,20 @@ public class ClientFragment extends Fragment {
                     public void onClick(DialogInterface dialog, int which) {
                         switch (which){
                             case DialogInterface.BUTTON_POSITIVE:
-                                Log.d("Log", "SAved button clicked");
+                                if (DEBUG) Log.d("Log", "SAved button clicked");
                             case DialogInterface.BUTTON_NEGATIVE:
 
                         }
                     }
                 };
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setMessage(R.string.areyousure).setPositiveButton(R.string.yes, dialogClickListener)
-                        .setNegativeButton(R.string.no, dialogClickListener).show();
+                if (saveEnable) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setMessage(R.string.areyousure).setPositiveButton(R.string.yes, dialogClickListener)
+                            .setNegativeButton(R.string.no, dialogClickListener).show();
+                } else {
+                    Toast.makeText(getActivity(), "Habilite la edicion primero", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -136,18 +231,19 @@ public class ClientFragment extends Fragment {
                     public void onClick(DialogInterface dialog, int which) {
                         switch (which){
                             case DialogInterface.BUTTON_POSITIVE:
-                                Log.d("Log", "Reboot button clicked");
+                                if (DEBUG) Log.d("Log", "Reboot button clicked");
                                 if (PetClient == null) {
-                                    Log.d("Log", "reboot fail client null");
+                                    if (DEBUG) Log.d("Log", "reboot fail client null");
                                     return;
                                 }
+
                                 HashMap<String, String> conn_details = new HashMap<>();
                                 HashMap<String, String> conn_data = new HashMap<>();
 
                                 conn_details.put("method", "POST");
                                 conn_details.put("url", "http://" + PetClient.getIpAddr() + "/settings");
 
-                                String admin_pass = ((MainActivity) getActivity()).getAdminPassword();
+
                                 if (admin_pass == null) return;
 
 
@@ -157,13 +253,13 @@ public class ClientFragment extends Fragment {
                                 ConnRest conn = new ConnRest(new iConnResult() {
                                     @Override
                                     public void onSuccess(JSONObject jsonObject) {
-                                        Log.d("Log", "Reboot success");
+                                        if (DEBUG) Log.d("Log", "Reboot success");
                                         closeTab();
                                     }
 
                                     @Override
                                     public void onFailure(Exception e) {
-                                        Log.d("Log", "Reboot no success");
+                                        if (DEBUG) Log.d("Log", "Reboot no success");
                                     }
                                 });
                                 conn.execute(conn_details, conn_data);
@@ -182,16 +278,16 @@ public class ClientFragment extends Fragment {
         btnVibration.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("Log", "Vibration button clicked");
+                if (DEBUG) Log.d("Log", "Vibration button clicked");
             }
         });
 
         btnSound.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("Log", "Sound button clicked");
+                if (DEBUG) Log.d("Log", "Sound button clicked");
                 if (PetClient == null) {
-                    Log.d("Log", "Petclient its NULL " + PetClientID);
+                    if (DEBUG) Log.d("Log", "Petclient its NULL " + PetClientID);
                     return;
                 }
 
@@ -201,47 +297,74 @@ public class ClientFragment extends Fragment {
         return rootView;
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        this.context = context;
+    }
+
     public void setupClient() {
         //Log.d("Log", "setupClient" + ((MainActivity)getActivity()).PetClientList.size());
 
 
         if (PetClient != null) {
-            Log.d("Log", "Setup Client SUCCESS Petclient NOT NULL");
+            if (DEBUG) Log.d("Log", "Setup Client SUCCESS Petclient NOT NULL");
             edtPetName.setText(PetClient.getName());
             edtChipID.setText(PetClient.getChip());
             edtPhone.setText(PetClient.getPhoneNumber());
             txtView.setText(PetClient.getIpAddr());
             setRSSI(PetClient.getRSSI());
         } else {
-            Log.d("Log","Setup Client FAILED Petclient NULL");
+            if (DEBUG) Log.d("Log","Setup Client FAILED Petclient NULL");
         }
 
     }
     @Override
     public void onResume() {
         super.onResume();
-        Log.d("Log", "Client Frag on resume");
+        if (DEBUG) Log.d("Log", "Client Frag on resume");
 
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        Log.d("Log", "Client Frag onPause");
+        if (DEBUG) Log.d("Log", "Client Frag onPause");
     }
 
     public void setRSSI(int RSSI) {
-        RSSIBar.setProgress( (RSSI + 100) );
+        if (RSSI > 10) { // greater mean a error
+            if (DEBUG) Log.d("Log", "Clientfrag RSSI error");
+            return;
+        }
+        int rssi = RSSI + 100;
+        if (rssi > 70)  rssi = 80; // scale from 0 to 70 (-30 best rssi)
+
+        //int old_rssi = RSSIBar.getProgress();
+
+        RSSIBar.setProgress( rssi );
+        RSSIText.setText(String.valueOf(rssi -100) );
     }
 
     public void closeTab(){
-        //((MainActivity)getActivity()).PetClientList.remove(PetClient_pos);
-        ((MainActivity)getActivity()).removeClientByID(PetClientID);
-        ((MainActivity)getActivity()).closeCurrentTab();
+        ((MainActivity)getActivity()).closeCurrentTab(this);
     }
 
-    public void update () {
-        Log.d("Log", "Clientfrag update called");
-        //client = ((MainActivity)getActivity()).PetClientList.get(PetClient_pos);
+    public void clientUpdate () {
+        //if (DEBUG) Log.d("Log", "Clientfrag update called");
+        int RSSI = PetClient.getRSSI();
+
+        setRSSI(RSSI);
+
+        int sens = ((MainActivity)getActivity()).getSensProgress();
+        int sensWarning = (sens * 5) -100;
+        //if (DEBUG) Log.d("Log", "Senswarning setup to " +sensWarning);
+        if (sensWarning > -100 && RSSI < sensWarning) {
+            Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            v.vibrate(500);
+        }
+
     }
+
+
 }
