@@ -36,15 +36,9 @@ public class ClientFragment extends Fragment {
     EditText edtPetName;
     EditText edtChipID;
     EditText edtPhone;
-
-
-    HashMap<String, String> conn_details = new HashMap<>();
-    HashMap<String, String> conn_data = new HashMap<>();
-
     String admin_pass;
 
     Handler mHandler = new Handler();
-
 
     public static ClientFragment newInstance(String PetClientID) {
         ClientFragment fragment = new ClientFragment();
@@ -73,22 +67,23 @@ public class ClientFragment extends Fragment {
         admin_pass = ((MainActivity) getActivity()).getAdminPassword();
 
         if (admin_pass != null) {
-            conn_details.put("method", "POST");
-            conn_details.put("url", "http://" + PetClient.getIpAddr() + "/client_info");
-            conn_data.put("admin_password", admin_pass);
-
             mHandler = new Handler();
-            mHandler.post(runnableCode);
+            mHandler.post(runableClientUpdate);
         }
     }
 
-
-    private Runnable runnableCode = new Runnable() {
+    private Runnable runableClientUpdate = new Runnable() {
         int i = 0;
         @Override
         public void run() {
             i++;
-            //Log.d("Log", "ClientFag: Called runnableCode " + i);
+            HashMap<String, String> conn_details = new HashMap<>();
+            HashMap<String, String> conn_data = new HashMap<>();
+            conn_details.put("method", "POST");
+            conn_details.put("url", "http://" + PetClient.getIpAddr() + "/client_info");
+            conn_data.put("admin_password", admin_pass);
+
+            //Log.d("Log", "ClientFag: Called runableClientUpdate " + i);
 
             ConnRest conn = new ConnRest(new iConnResult() {
                 @Override
@@ -118,9 +113,7 @@ public class ClientFragment extends Fragment {
             });
             conn.execute(conn_details, conn_data);
 
-
-
-            mHandler.postDelayed(runnableCode, 5000);
+           mHandler.postDelayed(runableClientUpdate, 5000);
         }
     };
 
@@ -128,7 +121,8 @@ public class ClientFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         Log.d("Log", "Client frag onDetach");
-        mHandler.removeCallbacks(runnableCode);
+        mHandler.removeCallbacks(runableClientUpdate);
+        context = null;
     }
 
     @Override
@@ -140,12 +134,10 @@ public class ClientFragment extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_client, container, false);
         txtView = rootView.findViewById(R.id.txtStatus);
         RSSIText = rootView.findViewById(R.id.RSSIText);
-
         edtPetName = rootView.findViewById(R.id.edtName);
         edtChipID = rootView.findViewById(R.id.edtChipID);
         edtPhone = rootView.findViewById(R.id.edtPhone);
         RSSIBar = rootView.findViewById(R.id.RSSIBar);
-
 
         if (PetClient != null) {
             if (DEBUG) Log.d("Log","Client Farg *client* not null");
@@ -178,7 +170,7 @@ public class ClientFragment extends Fragment {
         btnLights.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (DEBUG)  Log.d("Log", "Light button clicked");
+                Toast.makeText(context, "Lights", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -198,6 +190,7 @@ public class ClientFragment extends Fragment {
                         switch (which){
                             case DialogInterface.BUTTON_POSITIVE:
                                 if (DEBUG) Log.d("Log", "SAved button clicked");
+                                saveClientData();
                             case DialogInterface.BUTTON_NEGATIVE:
 
                         }
@@ -278,19 +271,14 @@ public class ClientFragment extends Fragment {
         btnVibration.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (DEBUG) Log.d("Log", "Vibration button clicked");
+                Toast.makeText(context, "Vibrator", Toast.LENGTH_SHORT).show();
             }
         });
 
         btnSound.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (DEBUG) Log.d("Log", "Sound button clicked");
-                if (PetClient == null) {
-                    if (DEBUG) Log.d("Log", "Petclient its NULL " + PetClientID);
-                    return;
-                }
-
+                Toast.makeText(context, "Sound", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -305,7 +293,6 @@ public class ClientFragment extends Fragment {
 
     public void setupClient() {
         //Log.d("Log", "setupClient" + ((MainActivity)getActivity()).PetClientList.size());
-
 
         if (PetClient != null) {
             if (DEBUG) Log.d("Log", "Setup Client SUCCESS Petclient NOT NULL");
@@ -356,8 +343,8 @@ public class ClientFragment extends Fragment {
 
         setRSSI(RSSI);
 
-        int sens = ((MainActivity)getActivity()).getSensProgress();
-        int sensWarning = (sens * 5) -100;
+        int sens = ((MainActivity) getActivity()).getSensProgress();
+        int sensWarning = (sens * 5) - 100;
         //if (DEBUG) Log.d("Log", "Senswarning setup to " +sensWarning);
         if (sensWarning > -100 && RSSI < sensWarning) {
             Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
@@ -366,5 +353,39 @@ public class ClientFragment extends Fragment {
 
     }
 
+    private void saveClientData() {
+        mHandler.removeCallbacks(runableClientUpdate);
 
+        HashMap<String, String> conn_details = new HashMap<>();
+        HashMap<String, String> conn_data = new HashMap<>();
+
+        conn_details.put("method", "POST");
+        conn_details.put("url", "http://" + PetClient.getIpAddr() + "/settings_android");
+        conn_data.put("admin_password", admin_pass);
+        conn_data.put("petName", edtPetName.getText().toString());
+        conn_data.put("petChip", edtChipID.getText().toString());
+        conn_data.put("telefono", edtPhone.getText().toString());
+
+        ConnRest conn = new ConnRest(new iConnResult() {
+            @Override
+            public void onSuccess(JSONObject jsonObject) {
+                mHandler.post(runableClientUpdate);
+                try {
+                    Toast.makeText(context,jsonObject.getString("status"), Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(context, "Excepcion", Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
+                }
+
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show();
+                mHandler.post(runableClientUpdate);
+            }
+
+        });
+        conn.execute(conn_details, conn_data);
+    }
 }

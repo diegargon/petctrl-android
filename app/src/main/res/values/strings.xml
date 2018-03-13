@@ -33,10 +33,12 @@
     <string name="pair">Emparejar</string>
 
     <!-- CLIENT TAB -->
-    <string name="name">Nombre: </string>
-    <string name="phone">Telefono: </string>
-    <string name="ChipID">ChipID: </string>
-    <string name="areyousure">¿esta seguro? </string>
+    <string name="name">Nombre</string>
+    <string name="phone">Telefono</string>
+    <string name="ChipID">ChipID</string>
+    <string name="areyousure">¿Esta seguro? </string>
+    <string name="edit">Editar</string>
+    <string name="save">Guardar</string>
     <string-array name="desconn_list">
         <item>Nada</item>
         <item>Luces</item>
@@ -46,5 +48,6 @@
 
     <!-- TAB OVerview -->
     <string name="overview">overview</string>
-
+    <string name="alertSens">Alerta Distancia</string>
+    <string name="onLostConn">A la desconexión</string>
 </resources>

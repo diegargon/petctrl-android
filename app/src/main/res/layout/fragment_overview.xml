@@ -4,8 +4,8 @@
     android:layout_height="match_parent"
     android:layout_above="@+id/txtOverview"
     android:orientation="vertical"
+    android:background="@color/clrGeneralBg"
     tools:context="net.envigo.petctrl.OverviewFragment">
-
 
     <Button
         android:id="@+id/btnScan"
@@ -14,7 +14,6 @@
         android:layout_gravity="center"
         android:layout_marginTop="10dp"
         android:text="@string/scan" />
-
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -27,14 +26,17 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_marginStart="4dp"
-            android:text="Sensibilidad Alerta: " />
+            android:textSize="20sp"
+            android:text="@string/alertSens" />
 
         <SeekBar
             style="@style/Widget.AppCompat.SeekBar.Discrete"
             android:id="@+id/sensBar"
+            android:layout_gravity="center_vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:max="6"
+
             android:progress="1" />
 
     </LinearLayout>
@@ -45,6 +47,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
         android:gravity="start"
+        android:paddingTop="10dp"
         android:orientation="horizontal">
 
         <TextView
@@ -52,27 +55,27 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_marginStart="4dp"
-            android:text="En mascota a a la desconexion:" />
+            android:textSize="20sp"
+            android:text="@string/onLostConn" />
 
         <Spinner
             android:id="@+id/spinner"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-
             android:entries="@array/desconn_list" />
 
     </LinearLayout>
 
-
-
-
     <TextView
         android:id="@+id/txtOverview"
-        android:layout_width="fill_parent"
-        android:layout_height="100dp"
-        android:text="" />
-
-
+        android:background="@drawable/border_rectangle"
+        android:textColor="@color/colorWhite"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:padding="2dp"
+        android:layout_marginStart="2dp"
+        android:layout_marginEnd="2dp"
+        />
 
 </LinearLayout>
