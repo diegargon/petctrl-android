@@ -1,11 +1,20 @@
 package net.envigo.petctrl;
 
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,23 +29,32 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import org.json.JSONObject;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 
 public class ClientFragment extends Fragment {
 
+    public static final int GET_FROM_GALLERY = 3;
     private final boolean DEBUG = true;
+
     private boolean saveEnable = false;
+    protected SharedPreferences settings = null;
+
+    public String PetClientID;
     Context context;
     View rootView;
     PetClients PetClient;
     ProgressBar RSSIBar;
-    public String PetClientID;
     TextView txtView ;
     TextView RSSIText;
     EditText edtPetName;
     EditText edtChipID;
     EditText edtPhone;
     String admin_pass;
+    int refreshTime;
 
     Handler mHandler = new Handler();
 
@@ -65,6 +83,8 @@ public class ClientFragment extends Fragment {
         }
 
         admin_pass = ((MainActivity) getActivity()).getAdminPassword();
+        settings = PreferenceManager.getDefaultSharedPreferences(context);
+        setRefreshTime(settings.getInt("refreshTime", 1));
 
         if (admin_pass != null) {
             mHandler = new Handler();
@@ -73,17 +93,19 @@ public class ClientFragment extends Fragment {
     }
 
     private Runnable runableClientUpdate = new Runnable() {
-        int i = 0;
         @Override
         public void run() {
-            i++;
+
+            int refreshPoint = settings.getInt("refreshTime", 5000);
+            setRefreshTime(refreshPoint);
+
             HashMap<String, String> conn_details = new HashMap<>();
             HashMap<String, String> conn_data = new HashMap<>();
             conn_details.put("method", "POST");
             conn_details.put("url", "http://" + PetClient.getIpAddr() + "/client_info");
             conn_data.put("admin_password", admin_pass);
 
-            //Log.d("Log", "ClientFag: Called runableClientUpdate " + i);
+            //if (DEBUG) Log.d("Log", "ClientFag: Called runableClientUpdate RefreshTime: " + refreshTime);
 
             ConnRest conn = new ConnRest(new iConnResult() {
                 @Override
@@ -101,7 +123,6 @@ public class ClientFragment extends Fragment {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
                 }
 
                 @Override
@@ -113,7 +134,7 @@ public class ClientFragment extends Fragment {
             });
             conn.execute(conn_details, conn_data);
 
-           mHandler.postDelayed(runableClientUpdate, 5000);
+           mHandler.postDelayed(runableClientUpdate, refreshTime);
         }
     };
 
@@ -160,12 +181,20 @@ public class ClientFragment extends Fragment {
         });
 
         ImageButton btnSave = rootView.findViewById(R.id.btnSave);
-        //ImageButton btnTurnOff = rootView.findViewById(R.id.btnTurnOff);
         ImageButton btnReboot = rootView.findViewById(R.id.btnReboot);
         ImageButton btnLights = rootView.findViewById(R.id.btnLights);
         ImageButton btnVibration = rootView.findViewById(R.id.btnVibration);
         ImageButton btnSound = rootView.findViewById(R.id.btnSound);
-        ImageView photo = rootView.findViewById(R.id.clientPhoto);
+        final ImageView photo = rootView.findViewById(R.id.clientPhoto);
+
+        new DownloadImageTask() {
+            @Override
+            protected void onPostExecute(Bitmap bitmap) {
+                super.onPostExecute(bitmap);
+                photo.setImageBitmap(bitmap);
+            }
+        }.execute("http://" + PetClient.getIpAddr() + "/foto.jpg");
+
 
         btnLights.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -177,7 +206,9 @@ public class ClientFragment extends Fragment {
         photo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /* TODO: Working ON photo clicker */
                 Toast.makeText(context, "Clicked image", Toast.LENGTH_SHORT).show();
+                startActivityForResult(new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI), GET_FROM_GALLERY);
             }
         });
 
@@ -207,15 +238,6 @@ public class ClientFragment extends Fragment {
             }
         });
 
-        /*
-        btnTurnOff.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-        */
-
         btnReboot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -236,9 +258,7 @@ public class ClientFragment extends Fragment {
                                 conn_details.put("method", "POST");
                                 conn_details.put("url", "http://" + PetClient.getIpAddr() + "/settings");
 
-
                                 if (admin_pass == null) return;
-
 
                                 conn_data.put("admin_password", admin_pass);
                                 conn_data.put("restart", "1");
@@ -324,13 +344,22 @@ public class ClientFragment extends Fragment {
             if (DEBUG) Log.d("Log", "Clientfrag RSSI error");
             return;
         }
+
         int rssi = RSSI + 100;
-        if (rssi > 70)  rssi = 80; // scale from 0 to 70 (-30 best rssi)
+        if (rssi > 70)  rssi = 70; // scale from 0 to 70 (-30 best rssi)
+        if (rssi >= 50)  rssi = map_range(rssi, 50, 70, 45, 50);
+
+        if(rssi < 50) rssi = map_range(rssi, 0, 49, 0,44);
 
         //int old_rssi = RSSIBar.getProgress();
-
+        String rssi_text = "RSSI: "+ String.valueOf(RSSI);
         RSSIBar.setProgress( rssi );
-        RSSIText.setText(String.valueOf(rssi -100) );
+        RSSIText.setText( rssi_text );
+
+    }
+
+    int map_range (int value, int in_min, int in_max, int out_min, int out_max) {
+        return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
     }
 
     public void closeTab(){
@@ -387,5 +416,121 @@ public class ClientFragment extends Fragment {
 
         });
         conn.execute(conn_details, conn_data);
+    }
+
+    public void setRefreshTime(int point) {
+
+        if (point == 0) {
+            refreshTime = 5 * 1000;
+        } else if (point == 1) {
+            refreshTime = 10 * 1000;
+        } else if (point == 2) {
+            refreshTime = 20 * 1000;
+        } else if (point == 3) {
+            refreshTime = 30 * 1000;
+        } else if (point == 4) {
+            refreshTime = 60 * 1000;
+        } else if (point == 5) {
+            refreshTime = 180 * 1000;
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode==GET_FROM_GALLERY && resultCode == Activity.RESULT_OK) {
+            Uri selectedImage = data.getData();
+            ByteArrayOutputStream bao = new ByteArrayOutputStream();
+            Bitmap bitmap;
+
+            try {
+
+                bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), selectedImage);
+
+                if (bitmap == null) return;
+
+                final ProgressDialog dialog;
+                dialog = new ProgressDialog(context);
+                dialog.setMessage(getString(R.string.waitdialog));
+                dialog.show();
+
+                int maxWidth = 300;
+
+                if (bitmap.getWidth() > maxWidth) {
+                    float aspectRatio = bitmap.getWidth() / (float) bitmap.getHeight();
+                    int ratioHeight = Math.round(maxWidth / aspectRatio);
+                    bitmap = Bitmap.createScaledBitmap(bitmap, maxWidth, ratioHeight, false);
+                }
+
+                if (bitmap.getByteCount() > 100000) {
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 75, bao);
+                } else {
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, bao);
+                }
+                Log.d("Log", "Size compressed " + bao.size());
+                byte[] image = bao.toByteArray();
+
+                final File f = new File(context.getCacheDir(), "foto_tmp.jpg");
+                f.createNewFile();
+                Log.d("Log", "Filepath:" + f.getAbsolutePath());
+                Log.d("Log", "Filepath:" + f.getCanonicalPath());
+                Log.d("Log", "Filepath:" + f.getPath());
+                FileOutputStream fos = new FileOutputStream(f);
+                fos.write(image);
+                fos.flush();
+                fos.close();
+
+                new AsyncTask<Void, Void, Void>() {
+
+                    @Override
+                    protected Void doInBackground(Void... voids) {
+
+                        String charset = "UTF-8";
+                        String requestURL = "http://" + PetClient.getIpAddr() + "/photoupload";
+
+                        try {
+                            MultipartUtility multipart;
+                            multipart = new MultipartUtility(requestURL, charset);
+                            multipart.addFilePart("name", new File(f.getAbsolutePath()));
+                            String response = multipart.finish(); // response from server.
+                            Log.d("Log", "Response " + response);
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        super.onPostExecute(aVoid);
+                        try {
+                            getPetImage();
+                            //String response = multipart.finish(); // response from server.
+                            //Log.d("Log", "Response " + response);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        if (dialog.isShowing()) dialog.dismiss();
+
+                    }
+                }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void getPetImage() {
+        final ImageView photo = rootView.findViewById(R.id.clientPhoto);
+
+        new DownloadImageTask() {
+            @Override
+            protected void onPostExecute(Bitmap bitmap) {
+                super.onPostExecute(bitmap);
+                photo.setImageBitmap(bitmap);
+            }
+        }.execute("http://" + PetClient.getIpAddr() + "/foto.jpg");
     }
 }

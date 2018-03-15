@@ -22,10 +22,12 @@ public class OverviewFragment extends Fragment {
     private Context context;
     public Button btnScan;
     public TextView txtOverview;
+    private TextView txtRefreshTime;
+
     private View rootView;
     private int sensBarProgress;
     private SeekBar sensBar;
-
+    private SeekBar refreshTime;
 
     public OverviewFragment() {
         // Required empty public constructor
@@ -54,12 +56,38 @@ public class OverviewFragment extends Fragment {
 
         rootView = inflater.inflate(R.layout.fragment_overview, container, false);
         txtOverview = rootView.findViewById(R.id.txtOverview);
+        txtRefreshTime = rootView.findViewById(R.id.txtRefreshTime);
+
         btnScan = rootView.findViewById(R.id.btnScan);
+
         sensBar = rootView.findViewById(R.id.sensBar);
+        refreshTime = rootView.findViewById(R.id.refreshTime);
 
         settings = PreferenceManager.getDefaultSharedPreferences(context);
         sensBar.setProgress(settings.getInt("sensWarning", 1));
+        refreshTime.setProgress(settings.getInt("refreshTime", 1));
 
+        setRefreshTxt();
+
+        refreshTime.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                setRefreshTxt();
+                SharedPreferences.Editor editPrefs = settings.edit();
+                editPrefs.putInt("refreshTime", progress );
+                editPrefs.apply();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 
         btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,10 +98,9 @@ public class OverviewFragment extends Fragment {
             }
         });
 
-        if (((MainActivity)getActivity()).checkConfig(false) == false) {
+        if (!((MainActivity)getActivity()).checkConfig(false)) {
             btnScan.setEnabled(false);
         } else {
-            //if (DEBUG)  Log.d("Log", "Overviewfrag performClick onCreateView");
             btnScan.performClick();
         }
 
@@ -117,4 +144,24 @@ public class OverviewFragment extends Fragment {
         return sensBarProgress;
     }
 
+    public void setRefreshTxt() {
+        String label = getString(R.string.refreshTime) + ": ";
+
+        int point = refreshTime.getProgress();
+
+        if (point == 0) {
+            label = label + "5s";
+        } else if (point == 1) {
+            label = label + "10s";
+        } else if (point == 2) {
+            label = label + "20s";
+        } else if (point == 3) {
+            label = label + "30s";
+        } else if (point == 4) {
+            label = label + "1m";
+        } else if (point == 5) {
+            label = label + "3m";
+        }
+        txtRefreshTime.setText(label);
+    }
 }

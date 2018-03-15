@@ -6,9 +6,12 @@
     <string name="welcome">Bienvenido</string>
     <string name="yes">Si</string>
     <string name="no">No</string>
+    <string name="on">on</string>
+    <string name="off">off</string>
     <string name="configNeed">Debe configurar su dispositivo en el menu de arriba a la derecha</string>
     <string name="closeToContinue">Pulse cerrar al finalizar para volver al modo normal</string>
     <string name="scan">scan</string>
+    <string name="waitdialog">Espere unos segundos</string>
     <!-- Strings related to Settings -->
     <string name="action_settings">Configuación</string>
     <string name="action_exit">Salir</string>
@@ -48,6 +51,7 @@
 
     <!-- TAB OVerview -->
     <string name="overview">overview</string>
-    <string name="alertSens">Alerta Distancia</string>
+    <string name="alertSens">Alerta lejania</string>
+    <string name="refreshTime">Comprobación cliente</string>
     <string name="onLostConn">A la desconexión</string>
 </resources>
