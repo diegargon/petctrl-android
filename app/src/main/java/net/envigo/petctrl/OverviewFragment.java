@@ -15,23 +15,20 @@ import android.widget.TextView;
 
 public class OverviewFragment extends Fragment {
 
-    private static final boolean DEBUG = true;
-
+    private static final boolean DEBUG = false;
     protected SharedPreferences settings;
-
     private Context context;
     public Button btnScan;
     public TextView txtOverview;
     private TextView txtRefreshTime;
-
     private View rootView;
     private int sensBarProgress;
     private SeekBar sensBar;
     private SeekBar refreshTime;
 
-    public OverviewFragment() {
-        // Required empty public constructor
-    }
+    MainActivity activity;
+
+    public OverviewFragment() {}
 
     public static OverviewFragment newInstance() {
        // if (DEBUG) Log.d("Log","OverviewFragment new instance");
@@ -45,9 +42,7 @@ public class OverviewFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (DEBUG) Log.d("Log", "OverviewFragment onCreate");
         //setRetainInstance(false);
-
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -79,29 +74,25 @@ public class OverviewFragment extends Fragment {
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStartTrackingTouch(SeekBar seekBar) {}
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
         btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((MainActivity)getActivity()).getClientList();
-                //String txt = ((MainActivity)getActivity()).overviewText();
+                if (activity != null) activity.getClientList();
+                //String txt = activity.overviewText();
                 //txtOverview.setText(txt);
             }
         });
 
-        if (!((MainActivity)getActivity()).checkConfig(false)) {
-            btnScan.setEnabled(false);
-        } else {
+        if (activity != null && activity.checkConfig(false)) {
             btnScan.performClick();
+        } else {
+            btnScan.setEnabled(false);
         }
 
         return rootView;
@@ -129,8 +120,10 @@ public class OverviewFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        //if (DEBUG) Log.d("Log", "Overviewfrag OnAttach");
+        if (DEBUG) Log.d("Log", "Overviewfrag OnAttach");
         this.context = context;
+        activity = ((MainActivity)getActivity());
+
     }
 
     public int getSensBarProgress () {

@@ -56,6 +56,10 @@ public class ClientFragment extends Fragment {
     String admin_pass;
     int refreshTime;
 
+    ImageView photo;
+
+    MainActivity activity;
+
     Handler mHandler = new Handler();
 
     public static ClientFragment newInstance(String PetClientID) {
@@ -76,23 +80,23 @@ public class ClientFragment extends Fragment {
             PetClientID =  getArguments().getString("PetClientID");
             if (DEBUG) Log.d("Log", "Client on create position: " + PetClientID);
 
-            if (((MainActivity)getActivity()).PetClientList.size() > 0) {
-                if (DEBUG) Log.d("Log","Clientfrag PEtList" + ((MainActivity)getActivity()).PetClientList.size() );
-                PetClient = ((MainActivity) getActivity()).getClientByID(PetClientID);
+            if (activity.PetClientList.size() > 0) {
+                if (DEBUG) Log.d("Log","Clientfrag PEtList" + activity.PetClientList.size() );
+                PetClient = activity.getClientByID(PetClientID);
             }
         }
 
-        admin_pass = ((MainActivity) getActivity()).getAdminPassword();
+        admin_pass = activity.getAdminPassword();
         settings = PreferenceManager.getDefaultSharedPreferences(context);
         setRefreshTime(settings.getInt("refreshTime", 1));
 
         if (admin_pass != null) {
             mHandler = new Handler();
-            mHandler.post(runableClientUpdate);
+            mHandler.post(runnableClientUpdate);
         }
     }
 
-    private Runnable runableClientUpdate = new Runnable() {
+    private Runnable runnableClientUpdate = new Runnable() {
         @Override
         public void run() {
 
@@ -105,7 +109,7 @@ public class ClientFragment extends Fragment {
             conn_details.put("url", "http://" + PetClient.getIpAddr() + "/client_info");
             conn_data.put("admin_password", admin_pass);
 
-            //if (DEBUG) Log.d("Log", "ClientFag: Called runableClientUpdate RefreshTime: " + refreshTime);
+            //if (DEBUG) Log.d("Log", "ClientFag: Called runnableClientUpdate RefreshTime: " + refreshTime);
 
             ConnRest conn = new ConnRest(new iConnResult() {
                 @Override
@@ -134,7 +138,7 @@ public class ClientFragment extends Fragment {
             });
             conn.execute(conn_details, conn_data);
 
-           mHandler.postDelayed(runableClientUpdate, refreshTime);
+           mHandler.postDelayed(runnableClientUpdate, refreshTime);
         }
     };
 
@@ -142,7 +146,7 @@ public class ClientFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         Log.d("Log", "Client frag onDetach");
-        mHandler.removeCallbacks(runableClientUpdate);
+        mHandler.removeCallbacks(runnableClientUpdate);
         context = null;
     }
 
@@ -185,16 +189,8 @@ public class ClientFragment extends Fragment {
         ImageButton btnLights = rootView.findViewById(R.id.btnLights);
         ImageButton btnVibration = rootView.findViewById(R.id.btnVibration);
         ImageButton btnSound = rootView.findViewById(R.id.btnSound);
-        final ImageView photo = rootView.findViewById(R.id.clientPhoto);
-
-        new DownloadImageTask() {
-            @Override
-            protected void onPostExecute(Bitmap bitmap) {
-                super.onPostExecute(bitmap);
-                photo.setImageBitmap(bitmap);
-            }
-        }.execute("http://" + PetClient.getIpAddr() + "/foto.jpg");
-
+        photo = rootView.findViewById(R.id.clientPhoto);
+        getPetImage();
 
         btnLights.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -206,9 +202,12 @@ public class ClientFragment extends Fragment {
         photo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /* TODO: Working ON photo clicker */
-                Toast.makeText(context, "Clicked image", Toast.LENGTH_SHORT).show();
-                startActivityForResult(new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI), GET_FROM_GALLERY);
+
+                if (activity.checkPermissions("READ_EXTERNAL")) {
+                    startActivityForResult(new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI), GET_FROM_GALLERY);
+                } else {
+                    activity.requestPermissions("READ_EXTERNAL");
+                }
             }
         });
 
@@ -309,10 +308,11 @@ public class ClientFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         this.context = context;
+        activity = ((MainActivity) getActivity());
     }
 
     public void setupClient() {
-        //Log.d("Log", "setupClient" + ((MainActivity)getActivity()).PetClientList.size());
+        //Log.d("Log", "setupClient" + activity.getActivity()).PetClientList.size());
 
         if (PetClient != null) {
             if (DEBUG) Log.d("Log", "Setup Client SUCCESS Petclient NOT NULL");
@@ -330,7 +330,6 @@ public class ClientFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (DEBUG) Log.d("Log", "Client Frag on resume");
-
     }
 
     @Override
@@ -348,7 +347,6 @@ public class ClientFragment extends Fragment {
         int rssi = RSSI + 100;
         if (rssi > 70)  rssi = 70; // scale from 0 to 70 (-30 best rssi)
         if (rssi >= 50)  rssi = map_range(rssi, 50, 70, 45, 50);
-
         if(rssi < 50) rssi = map_range(rssi, 0, 49, 0,44);
 
         //int old_rssi = RSSIBar.getProgress();
@@ -363,7 +361,7 @@ public class ClientFragment extends Fragment {
     }
 
     public void closeTab(){
-        ((MainActivity)getActivity()).closeCurrentTab(this);
+        activity.closeCurrentTab(this);
     }
 
     public void clientUpdate () {
@@ -372,7 +370,7 @@ public class ClientFragment extends Fragment {
 
         setRSSI(RSSI);
 
-        int sens = ((MainActivity) getActivity()).getSensProgress();
+        int sens = activity.getSensProgress();
         int sensWarning = (sens * 5) - 100;
         //if (DEBUG) Log.d("Log", "Senswarning setup to " +sensWarning);
         if (sensWarning > -100 && RSSI < sensWarning) {
@@ -383,7 +381,7 @@ public class ClientFragment extends Fragment {
     }
 
     private void saveClientData() {
-        mHandler.removeCallbacks(runableClientUpdate);
+        mHandler.removeCallbacks(runnableClientUpdate);
 
         HashMap<String, String> conn_details = new HashMap<>();
         HashMap<String, String> conn_data = new HashMap<>();
@@ -398,7 +396,7 @@ public class ClientFragment extends Fragment {
         ConnRest conn = new ConnRest(new iConnResult() {
             @Override
             public void onSuccess(JSONObject jsonObject) {
-                mHandler.post(runableClientUpdate);
+                mHandler.post(runnableClientUpdate);
                 try {
                     Toast.makeText(context,jsonObject.getString("status"), Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
@@ -411,7 +409,7 @@ public class ClientFragment extends Fragment {
             @Override
             public void onFailure(Exception e) {
                 Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show();
-                mHandler.post(runableClientUpdate);
+                mHandler.post(runnableClientUpdate);
             }
 
         });
@@ -473,9 +471,6 @@ public class ClientFragment extends Fragment {
 
                 final File f = new File(context.getCacheDir(), "foto_tmp.jpg");
                 f.createNewFile();
-                Log.d("Log", "Filepath:" + f.getAbsolutePath());
-                Log.d("Log", "Filepath:" + f.getCanonicalPath());
-                Log.d("Log", "Filepath:" + f.getPath());
                 FileOutputStream fos = new FileOutputStream(f);
                 fos.write(image);
                 fos.flush();
@@ -523,14 +518,17 @@ public class ClientFragment extends Fragment {
     }
 
     public void getPetImage() {
-        final ImageView photo = rootView.findViewById(R.id.clientPhoto);
+        GetPetImageTask getPetImageTask = new GetPetImageTask();
+        getPetImageTask.execute("http://" + PetClient.getIpAddr() + "/foto.jpg");
+    }
 
-        new DownloadImageTask() {
-            @Override
-            protected void onPostExecute(Bitmap bitmap) {
-                super.onPostExecute(bitmap);
-                photo.setImageBitmap(bitmap);
-            }
-        }.execute("http://" + PetClient.getIpAddr() + "/foto.jpg");
+     public class GetPetImageTask extends DownloadImageTask {
+        //final ImageView photo = rootView.findViewById(R.id.clientPhoto);
+
+         @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            photo.setImageBitmap(bitmap);
+        }
     }
 }
