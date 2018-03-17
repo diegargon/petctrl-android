@@ -18,6 +18,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
+                android:baselineAligned="false"
                 android:orientation="horizontal">
 
                 <LinearLayout
@@ -43,6 +44,7 @@
 
                         <EditText
                             android:id="@+id/edtName"
+                            android:labelFor="@+id/edtName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:ems="7"
@@ -72,6 +74,7 @@
                             android:ems="7"
                             android:enabled="false"
                             android:inputType="text|phone"
+                            android:labelFor="@+id/edtPhone"
                             android:text="@string/phone" />
 
                     </LinearLayout>
@@ -91,6 +94,7 @@
 
                         <EditText
                             android:id="@+id/edtChipID"
+                            android:labelFor="@+id/edtChipID"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:ems="7"
@@ -107,9 +111,12 @@
                     android:layout_height="wrap_content">
                 <ImageView
                     android:id="@+id/clientPhoto"
+                    android:contentDescription="@string/foto"
                     android:layout_width="140dp"
                     android:layout_height="130dp"
                     android:layout_weight="1"
+                    android:layout_marginStart="1dp"
+                    android:layout_marginEnd="3dp"
                     android:src="@android:drawable/btn_star" />
                 </LinearLayout>
 
@@ -118,14 +125,8 @@
             <LinearLayout
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:baselineAligned="false"
                 android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="30dp"
-                    android:layout_weight="1"
-                    android:gravity=""
-                    android:orientation="horizontal">
 
                     <ProgressBar
                         android:id="@+id/RSSIBar"
@@ -143,8 +144,6 @@
                         android:layout_height="wrap_content"
                         android:ems="4"
                         android:text="" />
-                </LinearLayout>
-
 
             </LinearLayout>
 
@@ -156,7 +155,8 @@
 
                 <ImageButton
                     android:id="@+id/btnLights"
-                    android:layout_width="9dp"
+                    android:contentDescription="@string/lights"
+                    android:layout_width="0dp"
                     android:layout_height="80dp"
                     android:layout_weight="1"
                     android:scaleType="fitCenter"
@@ -173,6 +173,7 @@
                 android:orientation="horizontal">
                 <ImageButton
                     android:id="@+id/btnSound"
+                    android:contentDescription="@string/sound"
                     android:layout_width="match_parent"
                     android:layout_height="80dp"
                     android:layout_weight="1"
@@ -183,6 +184,7 @@
                     />
                 <ImageButton
                     android:id="@+id/btnVibration"
+                    android:contentDescription="@string/vibration"
                     android:layout_width="match_parent"
                     android:layout_height="80dp"
                     android:background="@drawable/client_button"
@@ -194,6 +196,7 @@
 
                 <ImageButton
                     android:id="@+id/btnReboot"
+                    android:contentDescription="@string/reboot"
                     android:layout_width="match_parent"
                     android:layout_height="80dp"
                     android:layout_weight="1"
@@ -231,6 +234,7 @@
                     android:id="@+id/btnSave"
                     android:layout_width="60dp"
                     android:layout_height="50dp"
+                    android:contentDescription="@string/save"
                     android:src="@android:drawable/ic_menu_save" />
 
             </LinearLayout>
@@ -245,7 +249,11 @@
                 android:layout_marginStart="2dp"
                 android:layout_marginEnd="2dp"
                 android:text="" />
-            <!--FIXME Avoid Scroll bottom hidde problem -->
+            <!-- Avoid Scroll bottom hidde problem -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="50dp" />
+
         </LinearLayout>
     </ScrollView>
 </FrameLayout>

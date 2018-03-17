@@ -22,14 +22,14 @@ import java.util.Map;
 
 public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSONObject> {
 
-    final private boolean DEBUG = false;
+    final private static boolean DEBUG = false;
 
     private iConnResult<JSONObject> mCallBack;
     //private Context mContext;
-    public Exception mException;
+    private Exception mException;
 
     //public ConnRest(Context context, iConnResult callback) {
-    public ConnRest(iConnResult callback) {
+    ConnRest(iConnResult callback) {
         mCallBack = callback;
         //mContext = context;
     }

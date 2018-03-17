@@ -4,6 +4,7 @@ import org.json.JSONObject;
 
 /**
  * Created by diego on 8/03/18.
+ *
  */
 
 public interface iConnResult<T> {

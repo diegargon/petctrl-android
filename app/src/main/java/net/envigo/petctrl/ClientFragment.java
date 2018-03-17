@@ -1,8 +1,8 @@
 package net.envigo.petctrl;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,11 +36,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 
+
 public class ClientFragment extends Fragment {
 
     public static final int GET_FROM_GALLERY = 3;
-    private final boolean DEBUG = true;
-
+    private final static boolean DEBUG = true;
     private boolean saveEnable = false;
     protected SharedPreferences settings = null;
 
@@ -74,25 +75,12 @@ public class ClientFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(true);
+        if (DEBUG) Log.d("Log", "Client onCreate " + this);
+        //setRetainInstance(true);
 
         if (getArguments() != null && PetClient == null ) {
             PetClientID =  getArguments().getString("PetClientID");
             if (DEBUG) Log.d("Log", "Client on create position: " + PetClientID);
-
-            if (activity.PetClientList.size() > 0) {
-                if (DEBUG) Log.d("Log","Clientfrag PEtList" + activity.PetClientList.size() );
-                PetClient = activity.getClientByID(PetClientID);
-            }
-        }
-
-        admin_pass = activity.getAdminPassword();
-        settings = PreferenceManager.getDefaultSharedPreferences(context);
-        setRefreshTime(settings.getInt("refreshTime", 1));
-
-        if (admin_pass != null) {
-            mHandler = new Handler();
-            mHandler.post(runnableClientUpdate);
         }
     }
 
@@ -119,10 +107,17 @@ public class ClientFragment extends Fragment {
                     try {
                         if (jsonObject.getString("status").equals("ok")) {
                             String RSSI = jsonObject.getString("RSSI");
-                            PetClient.setRSSI(Integer.parseInt(RSSI));
-                            clientUpdate();
+                            if (PetClient.getRSSI() != Integer.parseInt(RSSI)) {
+                                PetClient.setRSSI(Integer.parseInt(RSSI));
+                                clientUpdate();
+                            }
+                            if (!PetClient.isReachable()) {
+                                PetClient.setReachable(true);
+                                activity.OverviewUpdate();
+                            }
+
                         } else {
-                            if (DEBUG) Log.d("Log", "Clientfrag refresh status notOK");
+                            Log.e("Log", "Clientfrag refresh status notOK");
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -131,8 +126,12 @@ public class ClientFragment extends Fragment {
 
                 @Override
                 public void onFailure(Exception e) {
-                    if (DEBUG) Log.d("Log", "Clientfrag NO refresh");
-                    PetClient.setRSSI(-100);
+                    Log.e("Log", "Clientfrag runnable Client update onFailed");
+                    if (PetClient.isReachable()) {
+                        PetClient.setRSSI(-100);
+                        PetClient.setReachable(false);
+                        activity.OverviewUpdate();
+                    }
                     clientUpdate();
                 }
             });
@@ -143,18 +142,38 @@ public class ClientFragment extends Fragment {
     };
 
     @Override
-    public void onDetach() {
-        super.onDetach();
-        Log.d("Log", "Client frag onDetach");
-        mHandler.removeCallbacks(runnableClientUpdate);
-        context = null;
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (DEBUG) Log.d("Log", "Client frag onAttach " + this);
+        this.context = context;
+        activity = ((MainActivity) getActivity());
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public void onDetach() {
+        super.onDetach();
+        if (DEBUG) Log.d("Log", "Client frag onDetach " + this );
+        mHandler.removeCallbacks(runnableClientUpdate);
+    }
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        if (DEBUG) Log.d("Log", "ClientFrag onCreateView");
+
+        admin_pass = activity.getAdminPassword();
+        settings = PreferenceManager.getDefaultSharedPreferences(context);
+        setRefreshTime(settings.getInt("refreshTime", 1));
+
+        if (DEBUG) Log.d("Log", "ClientFrag onCreateView " + this);
+
+        if (activity.PetClientList.size() > 0) {
+            if (DEBUG) Log.d("Log","Clientfrag PEtList" + activity.PetClientList.size() );
+            PetClient = activity.getClientByID(PetClientID);
+        } else {
+            Log.e("Log","Clientfrag PetList on activity its 0");
+        }
+
 
         rootView = inflater.inflate(R.layout.fragment_client, container, false);
         txtView = rootView.findViewById(R.id.txtStatus);
@@ -165,7 +184,7 @@ public class ClientFragment extends Fragment {
         RSSIBar = rootView.findViewById(R.id.RSSIBar);
 
         if (PetClient != null) {
-            if (DEBUG) Log.d("Log","Client Farg *client* not null");
+            if (DEBUG) Log.d("Log","ClientFrag: *client* not null");
             edtPetName.setText(PetClient.getName());
             edtChipID.setText(PetClient.getChip());
             edtPhone.setText(PetClient.getPhoneNumber());
@@ -190,12 +209,20 @@ public class ClientFragment extends Fragment {
         ImageButton btnVibration = rootView.findViewById(R.id.btnVibration);
         ImageButton btnSound = rootView.findViewById(R.id.btnSound);
         photo = rootView.findViewById(R.id.clientPhoto);
-        getPetImage();
+
+
+        if (PetClient != null) {
+            if (DEBUG) Log.d("Log", "Clientfrag Petclient not null getting image");
+            getPetImage();
+        } else {
+            Log.e("Log","Clientfrag Petclient null not getting image " + this);
+        }
 
         btnLights.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Toast.makeText(context, "Lights", Toast.LENGTH_SHORT).show();
+                if(DEBUG) Log.d("Log", "Lights clicked " + this);
             }
         });
 
@@ -220,6 +247,7 @@ public class ClientFragment extends Fragment {
                         switch (which){
                             case DialogInterface.BUTTON_POSITIVE:
                                 if (DEBUG) Log.d("Log", "SAved button clicked");
+                                activity.waitDialog.show();
                                 saveClientData();
                             case DialogInterface.BUTTON_NEGATIVE:
 
@@ -247,7 +275,7 @@ public class ClientFragment extends Fragment {
                             case DialogInterface.BUTTON_POSITIVE:
                                 if (DEBUG) Log.d("Log", "Reboot button clicked");
                                 if (PetClient == null) {
-                                    if (DEBUG) Log.d("Log", "reboot fail client null");
+                                    if (DEBUG) Log.e("Log", "reboot fail client null");
                                     return;
                                 }
 
@@ -271,7 +299,7 @@ public class ClientFragment extends Fragment {
 
                                     @Override
                                     public void onFailure(Exception e) {
-                                        if (DEBUG) Log.d("Log", "Reboot no success");
+                                        if (DEBUG) Log.e("Log", "Reboot no success");
                                     }
                                 });
                                 conn.execute(conn_details, conn_data);
@@ -301,46 +329,32 @@ public class ClientFragment extends Fragment {
             }
         });
 
+        if (admin_pass != null && PetClient != null) {
+            mHandler = new Handler();
+            mHandler.post(runnableClientUpdate);
+        } else {
+            Toast.makeText(getActivity(), "Admin pass or Petcliente Null", Toast.LENGTH_SHORT).show();
+            Log.e("Log", "Admin pass or Petclient NULL " + this);
+        }
+
         return rootView;
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        this.context = context;
-        activity = ((MainActivity) getActivity());
-    }
-
-    public void setupClient() {
-        //Log.d("Log", "setupClient" + activity.getActivity()).PetClientList.size());
-
-        if (PetClient != null) {
-            if (DEBUG) Log.d("Log", "Setup Client SUCCESS Petclient NOT NULL");
-            edtPetName.setText(PetClient.getName());
-            edtChipID.setText(PetClient.getChip());
-            edtPhone.setText(PetClient.getPhoneNumber());
-            txtView.setText(PetClient.getIpAddr());
-            setRSSI(PetClient.getRSSI());
-        } else {
-            if (DEBUG) Log.d("Log","Setup Client FAILED Petclient NULL");
-        }
-
-    }
-    @Override
     public void onResume() {
         super.onResume();
-        if (DEBUG) Log.d("Log", "Client Frag on resume");
+        if (DEBUG) Log.d("Log", "ClientFrag: onResume");
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (DEBUG) Log.d("Log", "Client Frag onPause");
+        if (DEBUG) Log.d("Log", "ClientFrag: onPause");
     }
 
     public void setRSSI(int RSSI) {
         if (RSSI > 10) { // greater mean a error
-            if (DEBUG) Log.d("Log", "Clientfrag RSSI error");
+            Log.e("Log", "Clientfrag: RSSI error");
             return;
         }
 
@@ -375,7 +389,7 @@ public class ClientFragment extends Fragment {
         //if (DEBUG) Log.d("Log", "Senswarning setup to " +sensWarning);
         if (sensWarning > -100 && RSSI < sensWarning) {
             Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-            v.vibrate(500);
+            if(v != null) v.vibrate(500);
         }
 
     }
@@ -398,17 +412,18 @@ public class ClientFragment extends Fragment {
             public void onSuccess(JSONObject jsonObject) {
                 mHandler.post(runnableClientUpdate);
                 try {
-                    Toast.makeText(context,jsonObject.getString("status"), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, getString(R.string.needReboot), Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     Toast.makeText(context, "Excepcion", Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
-
+                if (activity.waitDialog.isShowing()) activity.waitDialog.dismiss();
             }
 
             @Override
             public void onFailure(Exception e) {
                 Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show();
+                if (activity.waitDialog.isShowing()) activity.waitDialog.dismiss();
                 mHandler.post(runnableClientUpdate);
             }
 
@@ -433,6 +448,8 @@ public class ClientFragment extends Fragment {
         }
     }
 
+
+    @SuppressLint("StaticFieldLeak")
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -448,10 +465,7 @@ public class ClientFragment extends Fragment {
 
                 if (bitmap == null) return;
 
-                final ProgressDialog dialog;
-                dialog = new ProgressDialog(context);
-                dialog.setMessage(getString(R.string.waitdialog));
-                dialog.show();
+                activity.waitDialog.show();
 
                 int maxWidth = 300;
 
@@ -507,11 +521,12 @@ public class ClientFragment extends Fragment {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        if (dialog.isShowing()) dialog.dismiss();
 
+                        if (activity.waitDialog.isShowing()) activity.waitDialog.dismiss();
                     }
-                }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
+                }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             } catch (IOException e) {
+                if (activity.waitDialog.isShowing()) activity.waitDialog.dismiss();
                 e.printStackTrace();
             }
         }
@@ -522,7 +537,8 @@ public class ClientFragment extends Fragment {
         getPetImageTask.execute("http://" + PetClient.getIpAddr() + "/foto.jpg");
     }
 
-     public class GetPetImageTask extends DownloadImageTask {
+    @SuppressLint("StaticFieldLeak")
+    public class GetPetImageTask extends DownloadImageTask {
         //final ImageView photo = rootView.findViewById(R.id.clientPhoto);
 
          @Override

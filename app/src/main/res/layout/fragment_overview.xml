@@ -7,6 +7,16 @@
     android:background="@color/clrGeneralBg"
     tools:context="net.envigo.petctrl.OverviewFragment">
 
+
+    <ScrollView android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@color/clrGeneralBg">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
     <Button
         android:id="@+id/btnScan"
         android:layout_width="wrap_content"
@@ -97,10 +107,15 @@
         android:background="@drawable/border_rectangle"
         android:textColor="@color/colorWhite"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="wrap_content"
         android:padding="2dp"
         android:layout_marginStart="2dp"
         android:layout_marginEnd="2dp"
         />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="50dp" />
 
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

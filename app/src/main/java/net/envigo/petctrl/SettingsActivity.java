@@ -4,81 +4,45 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.ListPreference;
 import android.preference.Preference;
-import android.preference.PreferenceActivity;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
-
 import java.util.List;
 
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
+    private static boolean DEBUG = false;
 
     private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
             String stringValue = value.toString();
 
-            Log.d("Log", "onPreferenceChange");
-            Log.d("Log", "onPreferenceChange" + preference.toString() + ":" + stringValue);
+            if(DEBUG) Log.d("Log", "onPreferenceChange" + preference.toString() + ":" + stringValue);
 
-            if (preference instanceof ListPreference) {
-                /*
-                ListPreference listPreference = (ListPreference) preference;
-                int index = listPreference.findIndexOfValue(stringValue);
+            if(DEBUG) Log.d("Log", "Preferece.getkey->" + preference.getKey());
+            preference.setSummary(stringValue);
 
-                preference.setSummary(
-                        index >= 0
-                                ? listPreference.getEntries()[index]
-                                : null);
-                 */
-            } else if (preference instanceof RingtonePreference) {
-                /*
-                if (TextUtils.isEmpty(stringValue)) {
-                    preference.setSummary(R.string.pref_ringtone_silent);
-                } else {
-                    Ringtone ringtone = RingtoneManager.getRingtone(
-                            preference.getContext(), Uri.parse(stringValue));
-                    if (ringtone == null) {
-                        preference.setSummary(null);
-                    } else {
-                        String name = ringtone.getTitle(preference.getContext());
-                        preference.setSummary(name);
-                    }
-                }
-                */
-            } else {
-                Log.d("Log", "Preferece.getkey->" + preference.getKey());
-                preference.setSummary(stringValue);
-            }
             return true;
         }
     };
-
 
     private static boolean isXLargeTablet(Context context) {
         return (context.getResources().getConfiguration().screenLayout
                 & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
     }
 
-
     private static void bindPreferenceSummaryToValue(Preference preference) {
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
-        Log.d("Log", "bindPreferenceSummary called");
+        if (DEBUG) Log.d("Log", "bindPreferenceSummary called");
         // Trigger the listener immediately with the preference's
         // current value.
         sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
@@ -91,7 +55,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
-        Log.d("Log", "OnCreate SettingsActivity");
+        if (DEBUG) Log.d("Log", "OnCreate SettingsActivity");
     }
 
     private void setupActionBar() {
@@ -118,13 +82,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         return isXLargeTablet(this);
     }
 
-
     @Override
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public void onBuildHeaders(List<Header> target) {
         loadHeadersFromResource(R.xml.pref_headers, target);
     }
-
 
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
@@ -140,7 +102,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
-            Log.d("Log", "OnCreate GeneralFragment");
+            if (DEBUG) Log.d("Log", "OnCreate GeneralFragment");
             //Utilizado para cambiar el sumary por el valor establecido
             //bindPreferenceSummaryToValue(findPreference("admin_password"));
         }
@@ -164,7 +126,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_about);
             setHasOptionsMenu(true);
-            Log.d("Log", "OnCreate AboutFragment");
+            if (DEBUG) Log.d("Log", "OnCreate AboutFragment");
 
         }
 

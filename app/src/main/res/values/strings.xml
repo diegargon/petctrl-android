@@ -12,14 +12,16 @@
     <string name="closeToContinue">Pulse cerrar al finalizar para volver al modo normal</string>
     <string name="scan">scan</string>
     <string name="waitdialog">Espere unos segundos</string>
+    <string name="needReboot">Exito: Debes reiniciar para ver los cambios</string>
+    <string name="adminPassNull">Por favor configure la contraseña de administración</string>
     <!-- Strings related to Settings -->
     <string name="action_settings">Configuación</string>
     <string name="action_exit">Salir</string>
     <string name="action_pairdevices">Emparejar</string>
     <string name="action_pairdevices_ask">¿Emparejar?</string>
+
     <!-- General settings -->
     <string name="pref_header_general">General</string>
-
     <string name="pref_admin_password">Contraseña administracion</string>
     <string name="pref_admin_password_summary">Sera usada para acceder a sus dispositivos y como contraseña de conexion del hotspot. No se olvide de ella</string>
     <string name="pref_ap_name">Hotspot name</string>
@@ -42,6 +44,12 @@
     <string name="areyousure">¿Esta seguro? </string>
     <string name="edit">Editar</string>
     <string name="save">Guardar</string>
+    <string name="foto">foto</string>
+    <string name="lights">Luces</string>
+    <string name="sound">Sound</string>
+    <string name="vibration">Vibración</string>
+    <string name="reboot">Reiniciar</string>
+
     <string-array name="desconn_list">
         <item>Nada</item>
         <item>Luces</item>

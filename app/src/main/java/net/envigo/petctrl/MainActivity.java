@@ -1,6 +1,7 @@
 package net.envigo.petctrl;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,7 +9,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
-import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -35,19 +35,19 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     //private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1001;
-    private final static boolean DEBUG = false;
+    private final static boolean DEBUG = true;
 
     protected SharedPreferences settings = null;
 
     public List<Fragment> myFragments = new ArrayList<>();
     private ArrayList<String> categories = new ArrayList<>();
-    protected OverviewFragment OvFrag;
+
+    int savedTabPos = 0;
 
     int OverViewPos;
     Context context;
 
     protected MyFragmentPageAdapter mSectionsPagerAdapter;
-    private ViewPager mViewPager;
     private WifiUtils wifiUtils;
     protected TabLayout mTabLayout;
     protected String admin_password = null;
@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Handler mHandler;
 
+    ProgressDialog waitDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +71,10 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        waitDialog = new ProgressDialog(this);
+        waitDialog.setMessage(getString(R.string.waitdialog));
+        waitDialog.show();
+
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         admin_password = settings.getString("admin_password", null);
         ap_name = settings.getString("ap_name", null);
@@ -78,20 +83,37 @@ public class MainActivity extends AppCompatActivity {
 
         if (DEBUG) Log.d("Log", "Settings:" + admin_password + " " + ap_name);
 
-        if (checkConfig(true)) {
+        if (checkConfig()) {
             wifiUtils = new WifiUtils(context);
             wifiUtils.cfgAP(ap_name, admin_password);
 
             if (DEBUG) Log.d("Log", "Main, configuring user ap mode");
+        } else {
+            Toast.makeText(context, R.string.configNeed, Toast.LENGTH_SHORT).show();
+            Log.e("Log", "Main: Minor Error falta configuracion checkConfig return false");
         }
 
+        /*
         if (savedInstanceState != null) {
-            //ashOn = savedInstanceState.getBoolean("isFlashOn");
+            ashOn = savedInstanceState.getBoolean("isFlashOn");
         }
-        //prefs = getSharedPreferences(My_Prefs, MODE_PRIVATE);
-        //AutoOn = prefs.getBoolean("AutoOn", true);
-
+        prefs = getSharedPreferences(My_Prefs, MODE_PRIVATE);
+        AutoOn = prefs.getBoolean("AutoOn", true);
+        */
         setupTabs();
+
+        StateSaver stateSaver = (StateSaver) getLastCustomNonConfigurationInstance();
+        if (stateSaver != null) {
+            //if(DEBUG) Log.d("Log","Main: StateSaver not null");
+            PetClientList = stateSaver.getPetClientList();
+            if (PetClientList.size() > 0) {
+                openClientTabs();
+            }
+            savedTabPos = stateSaver.getTabPosition();
+        }
+
+
+        if (waitDialog.isShowing()) waitDialog.dismiss();
 
         requestPermissions("WRITE_SETTINGS");
 
@@ -104,20 +126,32 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             i++;
-            Log.d("Log", "Mainactivity: Called runnableCode " + i);
+            if (DEBUG) Log.d("Log", "Mainactivity: Called runnableCode " + i);
             // Repeat this the same runnable code block again another 2 seconds
             mHandler.postDelayed(runnableCode, 2000);
         }
     };
 
-    public boolean checkConfig(boolean msg) {
+    @Override
+    public Object onRetainCustomNonConfigurationInstance() {
+        //return super.onRetainCustomNonConfigurationInstance();
+        if(DEBUG) Log.d("Log", "Main: OnRetain called");
+
+        StateSaver stSaver = new StateSaver();
+        stSaver.setPetClientList(PetClientList);
+        stSaver.setTabPosition(mTabLayout.getSelectedTabPosition());
+        return stSaver;
+    }
+
+    public boolean checkConfig() {
+        return (admin_password != null && ap_name != null
+                && admin_password.length() >= 6 && ap_name.length() >= 4);
+        /*
         if (admin_password != null && ap_name != null && admin_password.length() >= 6 && ap_name.length() >= 4) {
             return true;
         }
-        if (msg) {
-            Toast.makeText(context, R.string.configNeed, Toast.LENGTH_SHORT).show();
-        }
         return false;
+        */
     }
 
     public void getClientList() {
@@ -143,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
                         for (PetClients result : PetClientList_tmp) {
 
                             if (result.getHWAddr().equals(clientScanResult.getHWAddr())) {
-                                if (DEBUG) Log.d("Log", "MAIN Petclientlist exists " );
+                                if (DEBUG) Log.d("Log", "MAIN Petclientlist exists ");
                                 coincidence = true;
 
                             }
@@ -151,9 +185,11 @@ public class MainActivity extends AppCompatActivity {
                         if (!coincidence) {
                             if (DEBUG) Log.d("Log", "Main Petclientlist not exists ");
                             PetClientList.add(clientScanResult);
-                            if (DEBUG) Log.d("Log", "Main assigned slot client" + PetClientList.size());
+                            if (DEBUG)
+                                Log.d("Log", "Main assigned slot client" + PetClientList.size());
                             get_client_info(clientScanResult);
-
+                        } else {
+                            if (waitDialog.isShowing()) waitDialog.dismiss();
                         }
                     } else {
                         PetClientList.add(clientScanResult);
@@ -166,6 +202,12 @@ public class MainActivity extends AppCompatActivity {
             }
 
         });
+    }
+
+    public void openClientTabs ()  {
+        for (PetClients client : PetClientList) {
+            get_client_info(client);
+        }
     }
 
     public void get_client_info(final PetClients client) {
@@ -203,12 +245,14 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
+                if (waitDialog.isShowing()) waitDialog.dismiss();
             }
 
             @Override
             public void onFailure(Exception e) {
-                if (DEBUG) Log.d("Log", "MAIN Conn OnFail: " + e.getMessage());
+                Log.e("Log", "MAIN Conn get_client_info OnFail: " + e.getMessage());
                 removeClientByID(client.getIpAddr());
+                if (waitDialog.isShowing()) waitDialog.dismiss();
             }
         });
 
@@ -237,24 +281,15 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         if (id == R.id.action_pairdevices) {
-            if (checkConfig(true) == true ) {
+            if (checkConfig()) {
                 showPairTab();
                 Toast.makeText(context, R.string.closeToContinue, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(context, R.string.configNeed, Toast.LENGTH_SHORT).show();
             }
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        super.onSaveInstanceState(outState, outPersistentState);
-
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
     }
 
     public class MyFragmentPageAdapter extends FragmentStatePagerAdapter {
@@ -267,17 +302,11 @@ public class MainActivity extends AppCompatActivity {
             this.context = context;
         }
 
-        @Override
-        public void setPrimaryItem(ViewGroup container, int position, Object object) {
-            super.setPrimaryItem(container, position, object);
-            //Log.d("Log", "SetprimartyItem called" + position + " " + container + " " + object);
-        }
-
-
+        @NonNull
         @Override
         public Object instantiateItem(ViewGroup container, int position) {
             //return super.instantiateItem(container, position);
-            //Log.d("Log", "instantiateItem called, position " + position);
+            if(DEBUG) Log.d("Log", "instantiateItem called, position " + position);
 
 
             Fragment createdFragment = (Fragment) super.instantiateItem(container, position);
@@ -290,29 +319,24 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int position) {
-            //Log.d("Log", "getItem adapter called " + position);
-
             return myFragments.get(position);
         }
 
         @Override
         public int getItemPosition(@NonNull Object object) {
-            //Log.d("Log","Main getItemPosition called" + object);
             //return super.getItemPosition(object);
-            return mSectionsPagerAdapter.POSITION_NONE;
+            //return mSectionsPagerAdapter.POSITION_NONE;
+            return POSITION_NONE;
         }
 
         @Override
         public int getCount() {
-            //Log.d("Log", "getCount adapter called->" + myFragments.size());
-
             return myFragments.size();
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
             //return super.getPageTitle(position);
-            //if (DEBUG) Log.d("Log", "MAIN getPageTitle adapter called" + position);
             setPos(position);
 
             return categories.get(position);
@@ -320,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        protected void addFragment(Fragment fragment, String title) {
+        void addFragment(Fragment fragment, String title) {
             if (DEBUG) Log.d("Log", "MAIN addFragment: " +getCount() + " " + fragment);
             //myFragments.add(new WeakReference<>(fragment));
 
@@ -328,17 +352,10 @@ public class MainActivity extends AppCompatActivity {
             categories.add( title);
             mSectionsPagerAdapter.notifyDataSetChanged();
         }
-        protected void removeFragment(int position) {
+        void removeFragment(int position) {
             myFragments.remove(position);
             categories.remove(position);
             mSectionsPagerAdapter.notifyDataSetChanged();
-        }
-
-
-        @Override
-        public void finishUpdate(ViewGroup container) {
-            super.finishUpdate(container);
-            //if (DEBUG) Log.d("Log", "MAIN frag finish Update Called");
         }
 
         @Override
@@ -348,27 +365,27 @@ public class MainActivity extends AppCompatActivity {
             //myFragments.set(position, null);
         }
 
-        protected int getPos() {
+        int getPos() {
             return pos;
         }
 
-        protected void setPos(int pos) {
+        void setPos(int pos) {
             mSectionsPagerAdapter.pos = pos;
         }
     }
 
     void setupTabs() {
+        ViewPager mViewPager;
         mSectionsPagerAdapter = new MyFragmentPageAdapter(this ,getSupportFragmentManager());
-        if (ShowWelcome) {
-            showWelcomeTab();
-        }
-
-        showOverviewTab();
-
         mViewPager = findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
         mTabLayout = findViewById(R.id.tabLayout);
         mTabLayout.setupWithViewPager(mViewPager);
+
+        if (ShowWelcome) showWelcomeTab();
+
+        showOverviewTab();
+
     }
 
     @Override
@@ -391,18 +408,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showOverviewTab() {
-        //Log.d("Log", "showOverviewTab called " + this);
+        //if (DEBUG) Log.d("Log", "showOverviewTab called " + this);
 
         OverViewPos = myFragments.size();
         mSectionsPagerAdapter.addFragment(OverviewFragment.newInstance(), getString(R.string.overview));
     }
 
     public void addClientTab(String title, String PetClientID) {
-        if (DEBUG)     Log.d("Log", "MAIN addclienttab:" + PetClientID);
+        if (DEBUG) Log.d("Log", "MAIN addclienttab:" + PetClientID);
         //mSectionsPagerAdapter.addFragment(new ClientFragment(), title);
         ClientFragment PetClientFrag = ClientFragment.newInstance(PetClientID);
         mSectionsPagerAdapter.addFragment(PetClientFrag, title);
-        PetClientFrag.setupClient();
+        //PetClientFrag.setupClient();
+        //mTabLayout.getTabAt(mSectionsPagerAdapter.getCount() -1).select();
+        if ((mSectionsPagerAdapter.getCount() -1) == savedTabPos) {
+            mTabLayout.getTabAt(mSectionsPagerAdapter.getCount() -1).select();
+        }
         OverviewUpdate();
     }
 
@@ -416,7 +437,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if(!frag_exists) {
             mSectionsPagerAdapter.addFragment(PetSettings.newInstance(), getString(R.string.pair));
-            mTabLayout.getTabAt(mSectionsPagerAdapter.getCount() -1 ).select();
+            mTabLayout.getTabAt(mSectionsPagerAdapter.getCount() -1).select();
         }
     }
 
@@ -426,7 +447,6 @@ public class MainActivity extends AppCompatActivity {
                 if (Settings.System.canWrite(getApplicationContext())) {
                     return true;
                 }
-
             }
             if (type.equals("READ_EXTERNAL")) {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -468,9 +488,7 @@ public class MainActivity extends AppCompatActivity {
 
         switch(requestCode) {
             case 200: { //WRITE/CHANGE SETTINGS (For wifi hotspot)
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                } else {
+                if (! (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) ) {
                     Toast.makeText(context, "Esta aplicacion no puede funcionar sin esos permisos", Toast.LENGTH_SHORT).show();
                     finish();
                 }
@@ -491,7 +509,7 @@ public class MainActivity extends AppCompatActivity {
     public PetClients getClientByID(String ClientID) {
         if (PetClientList != null) {
             for (PetClients result : PetClientList) {
-                if (result.getIpAddr() == ClientID) {
+                if (result.getIpAddr().equals(ClientID)) {
                     return result;
                 }
             }
@@ -502,7 +520,7 @@ public class MainActivity extends AppCompatActivity {
         if (DEBUG) Log.d("Log", "MAIN removeClientByID called");
         if(PetClientList != null) {
             for (PetClients result : PetClientList) {
-                if (result.getIpAddr() == ClientID) {
+                if (result.getIpAddr().equals(ClientID)) {
                     if (DEBUG) Log.d("Log", "MAIN removeClientByID: "  + PetClientList.indexOf(result) + " ip: " + ClientID);
                     PetClientList.remove(result);
                     OverviewUpdate();
@@ -512,9 +530,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
     public void OverviewUpdate () {
-        if (DEBUG)  Log.d("Log","MAIN overview update");
+        if (DEBUG) Log.d("Log","MAIN overview update");
 
         int num_clients = PetClientList.size();
         String client_details = "";
@@ -546,7 +563,7 @@ public class MainActivity extends AppCompatActivity {
         if (DEBUG) Log.d("Log", "MAIN Get admin password");
         return admin_password;
     }
-    protected String getApName() { return ap_name; };
+    protected String getApName() { return ap_name; }
 
     public void closeCurrentTab(Fragment frag) {
         int CurrentPos = mSectionsPagerAdapter.getPos();
@@ -563,8 +580,6 @@ public class MainActivity extends AppCompatActivity {
 
     public int getSensProgress() {
         OverviewFragment fr = (OverviewFragment) myFragments.get(OverViewPos);
-        int sens = fr.getSensBarProgress();
-
-        return sens;
+        return fr.getSensBarProgress();
     }
 }

@@ -34,6 +34,8 @@ public class PetSettings  extends Fragment {
     private TextView scanText;
     private ArrayAdapter<String> listAdapter ;
     private ListView petListView;
+    MainActivity activity;
+
 
 
     private ArrayList<PetClients> PetClientAssocList;
@@ -70,11 +72,11 @@ public class PetSettings  extends Fragment {
         closeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TabLayout tabLayout = ((MainActivity) getActivity()).mTabLayout;
-                MainActivity.MyFragmentPageAdapter mAdapter = ((MainActivity) getActivity()).mSectionsPagerAdapter;
+                TabLayout tabLayout = activity.mTabLayout;
+                MainActivity.MyFragmentPageAdapter mAdapter = activity.mSectionsPagerAdapter;
 
-                String admin_password = ((MainActivity)getActivity()).getAdminPassword();
-                String ap_name = ((MainActivity)getActivity()).getApName();
+                String admin_password = activity.getAdminPassword();
+                String ap_name = activity.getApName();
 
                 if (admin_password != null && ap_name != null && admin_password.length() >= 6 && ap_name.length() >= 4) {
                     WifiUtils wifi = new WifiUtils(context);
@@ -147,7 +149,8 @@ public class PetSettings  extends Fragment {
                 ArrayList<String> petList = new ArrayList<>();
                 listAdapter = new ArrayAdapter<>(context, R.layout.petlistrow, petList);
 
-                scanText.setText("WifiApState: " + wifiUtils.getState() + "\n\n");
+                String text = "WifiApState: " + wifiUtils.getState() + "\n\n";
+                scanText.setText(text);
                 scanText.append("Clients: \n");
 
                 PetClientAssocList = clients;
@@ -165,16 +168,17 @@ public class PetSettings  extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         Log.d("Log", "onAttach PetSettings called");
-
         this.context = context;
+        activity = ((MainActivity) getActivity());
+
     }
 
     public void assocClient(final int position) {
         final PetClients client = PetClientAssocList.get(position);
         Log.d("Log", "assocClient");
 
-        final String admin_password = ((MainActivity)getActivity()).getAdminPassword();
-        final String ap_name = ((MainActivity)getActivity()).getApName();
+        final String admin_password = activity.getAdminPassword();
+        final String ap_name = activity.getApName();
 
         if (admin_password.equals("false") || ap_name.equals("false")) { return; }
 

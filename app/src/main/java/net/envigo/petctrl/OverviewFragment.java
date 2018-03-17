@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,17 +13,17 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class OverviewFragment extends Fragment {
 
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
     protected SharedPreferences settings;
     private Context context;
     public Button btnScan;
     public TextView txtOverview;
     private TextView txtRefreshTime;
-    private View rootView;
-    private int sensBarProgress;
+
     private SeekBar sensBar;
     private SeekBar refreshTime;
 
@@ -31,23 +32,22 @@ public class OverviewFragment extends Fragment {
     public OverviewFragment() {}
 
     public static OverviewFragment newInstance() {
-       // if (DEBUG) Log.d("Log","OverviewFragment new instance");
-        OverviewFragment fragment = new OverviewFragment();
-
-        return fragment;
+        //OverviewFragment fragment = new OverviewFragment();
+        //return fragment;
+        return new OverviewFragment();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (DEBUG) Log.d("Log", "OverviewFragment onCreate");
-        //setRetainInstance(false);
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull  LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         if (DEBUG) Log.d("Log", "Overviewfrag onCreateView");
+        View rootView;
 
         rootView = inflater.inflate(R.layout.fragment_overview, container, false);
         txtOverview = rootView.findViewById(R.id.txtOverview);
@@ -83,37 +83,31 @@ public class OverviewFragment extends Fragment {
         btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (activity != null) activity.getClientList();
+                Log.d("Log", "Overviewfrag: btnScan click called");
+                if (activity != null) {
+                    activity.waitDialog.show();
+                    activity.getClientList();
+                }
                 //String txt = activity.overviewText();
                 //txtOverview.setText(txt);
             }
         });
 
-        if (activity != null && activity.checkConfig(false)) {
-            btnScan.performClick();
-        } else {
+        if(!activity.checkConfig()) {
+            Toast.makeText(context, R.string.configNeed, Toast.LENGTH_SHORT).show();
             btnScan.setEnabled(false);
+        } else {
+            btnScan.performClick();
         }
 
         return rootView;
     }
 
     public  void setText(String text) {
-        //txtOverview = rootView.findViewById(R.id.txtOverview);
-        if (txtOverview != null) { //TODO: Al rotar la pantalla es null y peta
-            if (DEBUG) Log.d("Log", "Overviewfrag SetText txtOVerview  not null ");
+        if (txtOverview != null) {
             txtOverview.setText(text);
         } else {
-            if (DEBUG) Log.d("Log", "Overviewfarg SetText  txtOverview null");
-        }
-    }
-
-    public void update() {
-        if (btnScan != null) {
-            //if (DEBUG) Log.d("Log", "Overviewfrag UPDATE CLICK");
-            btnScan.performClick();
-        } else {
-            //if (DEBUG) Log.d("Log", "Overviewfrag UPDATE NOCLICK");
+            Log.e("Log", "Overviewfarg SetText  txtOverview null");
         }
     }
 
@@ -123,10 +117,10 @@ public class OverviewFragment extends Fragment {
         if (DEBUG) Log.d("Log", "Overviewfrag OnAttach");
         this.context = context;
         activity = ((MainActivity)getActivity());
-
     }
 
     public int getSensBarProgress () {
+        int sensBarProgress;
         sensBarProgress = sensBar.getProgress();
         if (sensBarProgress != settings.getInt("sensWarning", 1)) {
             SharedPreferences.Editor editPrefs = settings.edit();

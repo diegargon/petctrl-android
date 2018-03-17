@@ -45,7 +45,7 @@ public class MultipartUtility {
     private OutputStream outputStream;
     private PrintWriter writer;
 
-    public MultipartUtility(String requestURL, String charset)
+    MultipartUtility(String requestURL, String charset)
             throws IOException {
         this.charset = charset;
 
@@ -78,7 +78,7 @@ public class MultipartUtility {
         writer.flush();
     }
 
-    public void addFilePart(String fieldName, File uploadFile)
+    void addFilePart(String fieldName, File uploadFile)
             throws IOException {
         String fileName = uploadFile.getName();
         writer.append("--" + boundary).append(LINE_FEED);
@@ -113,7 +113,7 @@ public class MultipartUtility {
         writer.flush();
     }
 
-    public String finish() throws IOException {
+    String finish() throws IOException {
         String response = "";
 
         writer.append(LINE_FEED).flush();
@@ -154,7 +154,6 @@ public class MultipartUtility {
 
             return result;
         } catch (Exception e) {
-            // TODO: handle exception
             Log.e("InputStream", "Error : " + e.toString());
             return result;
         }
