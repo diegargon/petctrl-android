@@ -16,7 +16,9 @@ import java.util.ArrayList;
  *
  */
 
-public class WifiUtils {
+
+@SuppressWarnings({"UnusedReturnValue", "WeakerAccess", "unused"})
+class WifiUtils {
 
     private Context context;
     private WifiManager wifi;
@@ -27,6 +29,7 @@ public class WifiUtils {
     WifiUtils(Context context) {
         this.context = context;
     }
+
 
     void wifiInit() {
         if (wifi == null) {

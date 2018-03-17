@@ -16,6 +16,7 @@ import android.support.v4.app.NavUtils;
 import java.util.List;
 
 
+@SuppressWarnings("unused")
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
     private static boolean DEBUG = false;
@@ -39,6 +40,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
     }
 
+
     private static void bindPreferenceSummaryToValue(Preference preference) {
         // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
@@ -50,6 +52,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         .getDefaultSharedPreferences(preference.getContext())
                         .getString(preference.getKey(), ""));
     }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -36,14 +35,12 @@ public class MainActivity extends AppCompatActivity {
 
     //private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1001;
     private final static boolean DEBUG = true;
-
     protected SharedPreferences settings = null;
 
     public List<Fragment> myFragments = new ArrayList<>();
     private ArrayList<String> categories = new ArrayList<>();
 
     int savedTabPos = 0;
-
     int OverViewPos;
     Context context;
 
@@ -52,13 +49,10 @@ public class MainActivity extends AppCompatActivity {
     protected TabLayout mTabLayout;
     protected String admin_password = null;
     protected String ap_name = null;
-
     private boolean ShowWelcome = true;
     protected ArrayList<PetClients> PetClientList = new ArrayList<>();
-
-    private Handler mHandler;
-
     ProgressDialog waitDialog;
+    //private Handler mHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
         //mHandler.post(runnableCode);
     }
 
+    /*
     private Runnable runnableCode = new Runnable() {
         int i = 0;
         @Override
@@ -131,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
             mHandler.postDelayed(runnableCode, 2000);
         }
     };
+    */
 
     @Override
     public Object onRetainCustomNonConfigurationInstance() {
@@ -169,6 +165,9 @@ public class MainActivity extends AppCompatActivity {
                  */
                 ArrayList<PetClients> PetClientList_tmp = PetClientList;
 
+                if (clients.size() == 0) {
+                    if (waitDialog.isShowing()) waitDialog.dismiss();
+                }
                 for (PetClients clientScanResult : clients) {
 
                     if(PetClientList_tmp.size() > 0) {
@@ -210,6 +209,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void get_client_info(final PetClients client) {
         if (DEBUG) Log.d("Log", "Main: Get client info called");
         HashMap<String, String> conn_details = new HashMap<>();
@@ -295,6 +295,7 @@ public class MainActivity extends AppCompatActivity {
     public class MyFragmentPageAdapter extends FragmentStatePagerAdapter {
 
         private  int pos = 0;
+        @SuppressWarnings("unused")
         private Context context;
 
         private MyFragmentPageAdapter(Context context, FragmentManager fm) {
@@ -342,8 +343,6 @@ public class MainActivity extends AppCompatActivity {
             return categories.get(position);
         }
 
-
-
         void addFragment(Fragment fragment, String title) {
             if (DEBUG) Log.d("Log", "MAIN addFragment: " +getCount() + " " + fragment);
             //myFragments.add(new WeakReference<>(fragment));
@@ -368,7 +367,6 @@ public class MainActivity extends AppCompatActivity {
         int getPos() {
             return pos;
         }
-
         void setPos(int pos) {
             mSectionsPagerAdapter.pos = pos;
         }
@@ -393,7 +391,6 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         if (DEBUG) Log.d("Log", "Main onStop called");
     }
-
 
     @Override
     protected void onDestroy() {
@@ -422,7 +419,8 @@ public class MainActivity extends AppCompatActivity {
         //PetClientFrag.setupClient();
         //mTabLayout.getTabAt(mSectionsPagerAdapter.getCount() -1).select();
         if ((mSectionsPagerAdapter.getCount() -1) == savedTabPos) {
-            mTabLayout.getTabAt(mSectionsPagerAdapter.getCount() -1).select();
+            TabLayout.Tab currentTab = mTabLayout.getTabAt(mSectionsPagerAdapter.getCount() -1);
+            if(currentTab != null) currentTab.select();
         }
         OverviewUpdate();
     }
@@ -437,11 +435,12 @@ public class MainActivity extends AppCompatActivity {
         }
         if(!frag_exists) {
             mSectionsPagerAdapter.addFragment(PetSettings.newInstance(), getString(R.string.pair));
-            mTabLayout.getTabAt(mSectionsPagerAdapter.getCount() -1).select();
+            TabLayout.Tab currentTab = mTabLayout.getTabAt(mSectionsPagerAdapter.getCount() -1);
+            if(currentTab != null) currentTab.select();
         }
     }
 
-    boolean checkPermissions(String type) {
+    boolean checkPermissions(@SuppressWarnings("SameParameterValue") String type) {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
             if (type.equals("WRITE_SETTINGS")) {
                 if (Settings.System.canWrite(getApplicationContext())) {
@@ -534,25 +533,30 @@ public class MainActivity extends AppCompatActivity {
         if (DEBUG) Log.d("Log","MAIN overview update");
 
         int num_clients = PetClientList.size();
-        String client_details = "";
+        String client_details;
 
-        //String text += "Clientes: " + PetClientList.size() + "\n";
+        StringBuilder sb = new StringBuilder();
 
         if (num_clients > 0) {
             for (PetClients client : PetClientList) {
                 if (client.getName() != null) {
-                    client_details += "Nombre: " + client.getName();
-                    client_details += " Online: ";
-                    client_details += client.isReachable() ? "Si" : "No";
-                    client_details += "\n";
+                    sb.append(getString(R.string.name))
+                            .append(": ")
+                            .append(client.getName())
+                            .append(" ")
+                            .append(getString(R.string.online))
+                            .append(": ")
+                            .append(client.isReachable() ? getString(R.string.yes) : getString(R.string.no))
+                            .append("\n");
                 } else {
                     num_clients -= 1;
                 }
             }
+            client_details = sb.toString();
         } else {
             return;
         }
-        String text = "Clientes: " + num_clients + "\n";
+        String text = getString(R.string.clients) + ": "+ num_clients + "\n";
         text += client_details;
 
         OverviewFragment fr = (OverviewFragment) myFragments.get(OverViewPos);

@@ -85,6 +85,7 @@ public class ClientFragment extends Fragment {
     }
 
     private Runnable runnableClientUpdate = new Runnable() {
+        @SuppressWarnings("unchecked")
         @Override
         public void run() {
 
@@ -269,6 +270,8 @@ public class ClientFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+
+                    @SuppressWarnings("unchecked")
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         switch (which){
@@ -394,6 +397,7 @@ public class ClientFragment extends Fragment {
 
     }
 
+    @SuppressWarnings("unchecked")
     private void saveClientData() {
         mHandler.removeCallbacks(runnableClientUpdate);
 

@@ -62,4 +62,11 @@
     <string name="alertSens">Alerta lejania</string>
     <string name="refreshTime">Comprobación cliente</string>
     <string name="onLostConn">A la desconexión</string>
+    <string name="online">Online</string>
+    <string name="clients">Clientes</string>
+    <!--
+    <string name=""></string>
+    <string name=""></string>
+    <string name=""></string>
+    -->
 </resources>

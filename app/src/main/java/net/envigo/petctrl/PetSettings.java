@@ -173,6 +173,7 @@ public class PetSettings  extends Fragment {
 
     }
 
+    @SuppressWarnings("unchecked")
     public void assocClient(final int position) {
         final PetClients client = PetClientAssocList.get(position);
         Log.d("Log", "assocClient");

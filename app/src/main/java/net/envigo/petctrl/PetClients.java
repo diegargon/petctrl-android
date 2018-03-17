@@ -5,6 +5,7 @@ package net.envigo.petctrl;
  *
  */
 
+@SuppressWarnings("unused")
 class PetClients {
     private String Name = null;
     private String ChipID = null;

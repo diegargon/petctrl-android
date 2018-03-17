@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+@SuppressWarnings("unused")
 public class WelcomeFragment extends Fragment {
 
 //    private OnFragmentInteractionListener mListener;

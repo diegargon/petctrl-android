@@ -18,6 +18,7 @@ import java.util.Map;
 
 /**
  * Created by diego on 8/03/18.
+ *
  */
 
 public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSONObject> {
@@ -38,9 +39,7 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
     protected JSONObject doInBackground(HashMap<String, String> ... params) {
         if(DEBUG) Log.d("Log", "doInBackground execute");
 
-
-
-        HttpURLConnection conn = null;
+        HttpURLConnection conn;
         HashMap<String, String> conn_details = params[0];
 
         String method = conn_details.get("method");
@@ -96,9 +95,14 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
             String line;
-            String result = "";
+            String result;
 
-            while ((line = reader.readLine()) != null) result += line;
+            StringBuilder sb = new StringBuilder();
+
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            result = sb.toString();
 
             inputStream.close();
             if(DEBUG)  Log.d("Log", "ConnRest -> Info result" + result);

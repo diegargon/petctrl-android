@@ -36,6 +36,7 @@ String response = multipart.finish(); // response from server.
 
  */
 
+@SuppressWarnings({"unused", "SameParameterValue"})
 public class MultipartUtility {
 
     private final String boundary;
@@ -68,11 +69,11 @@ public class MultipartUtility {
     }
 
     public void addFormField(String name, String value) {
-        writer.append("--" + boundary).append(LINE_FEED);
-        writer.append("Content-Disposition: form-data; name=\"" + name + "\"")
-                .append(LINE_FEED);
-        writer.append("Content-Type: text/plain; charset=" + charset).append(
-                LINE_FEED);
+        writer.append("--").append(boundary).append(LINE_FEED);
+        writer.append("Content-Disposition: form-data; name=\"")
+                .append(name).append("\"").append(LINE_FEED);
+        writer.append("Content-Type: text/plain; charset=")
+                .append(charset).append(LINE_FEED);
         writer.append(LINE_FEED);
         writer.append(value).append(LINE_FEED);
         writer.flush();
@@ -81,14 +82,12 @@ public class MultipartUtility {
     void addFilePart(String fieldName, File uploadFile)
             throws IOException {
         String fileName = uploadFile.getName();
-        writer.append("--" + boundary).append(LINE_FEED);
-        writer.append(
-                "Content-Disposition: form-data; name=\"" + fieldName
-                        + "\"; filename=\"" + fileName + "\"")
-                .append(LINE_FEED);
-        writer.append(
-                "Content-Type: "
-                        + URLConnection.guessContentTypeFromName(fileName))
+        writer.append("--").append(boundary).append(LINE_FEED);
+        writer.append("Content-Disposition: form-data; name=\"")
+                .append(fieldName).append("\"; filename=\"")
+                .append(fileName).append("\"").append(LINE_FEED);
+        writer.append("Content-Type: ")
+                .append(URLConnection.guessContentTypeFromName(fileName))
                 .append(LINE_FEED);
         writer.append("Content-Transfer-Encoding: binary").append(LINE_FEED);
         //writer.append(LINE_FEED); //add a fucking space to file (esp8266+arduino)
@@ -109,15 +108,15 @@ public class MultipartUtility {
     }
 
     public void addHeaderField(String name, String value) {
-        writer.append(name + ": " + value).append(LINE_FEED);
+        writer.append(name).append(": ").append(value).append(LINE_FEED);
         writer.flush();
     }
 
     String finish() throws IOException {
-        String response = "";
+        String response;
 
         writer.append(LINE_FEED).flush();
-        writer.append("--" + boundary + "--").append(LINE_FEED);
+        writer.append("--").append(boundary).append("--").append(LINE_FEED);
         writer.close();
 
         // checks server's status code first
@@ -134,7 +133,6 @@ public class MultipartUtility {
 
         return response;
     }
-
 
     private static String inputStreamToString(InputStream in) {
         String result = "";
@@ -157,6 +155,5 @@ public class MultipartUtility {
             Log.e("InputStream", "Error : " + e.toString());
             return result;
         }
-
     }
 }
