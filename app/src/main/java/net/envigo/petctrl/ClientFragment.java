@@ -39,8 +39,8 @@ import java.util.HashMap;
 
 public class ClientFragment extends Fragment {
 
+    private final static boolean DEBUG = false;
     public static final int GET_FROM_GALLERY = 3;
-    private final static boolean DEBUG = true;
     private boolean saveEnable = false;
     protected SharedPreferences settings = null;
 
@@ -248,7 +248,7 @@ public class ClientFragment extends Fragment {
                         switch (which){
                             case DialogInterface.BUTTON_POSITIVE:
                                 if (DEBUG) Log.d("Log", "SAved button clicked");
-                                activity.waitDialog.show();
+                                activity.ShowProgressDialog();
                                 saveClientData();
                             case DialogInterface.BUTTON_NEGATIVE:
 
@@ -391,8 +391,7 @@ public class ClientFragment extends Fragment {
         int sensWarning = (sens * 5) - 100;
         //if (DEBUG) Log.d("Log", "Senswarning setup to " +sensWarning);
         if (sensWarning > -100 && RSSI < sensWarning) {
-            Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-            if(v != null) v.vibrate(500);
+            activity.shakeIt();
         }
 
     }
@@ -421,13 +420,13 @@ public class ClientFragment extends Fragment {
                     Toast.makeText(context, "Excepcion", Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
-                if (activity.waitDialog.isShowing()) activity.waitDialog.dismiss();
+                activity.HideProgressDialog();
             }
 
             @Override
             public void onFailure(Exception e) {
                 Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show();
-                if (activity.waitDialog.isShowing()) activity.waitDialog.dismiss();
+                activity.HideProgressDialog();
                 mHandler.post(runnableClientUpdate);
             }
 
@@ -469,7 +468,7 @@ public class ClientFragment extends Fragment {
 
                 if (bitmap == null) return;
 
-                activity.waitDialog.show();
+                activity.ShowProgressDialog();
 
                 int maxWidth = 300;
 
@@ -526,11 +525,11 @@ public class ClientFragment extends Fragment {
                             e.printStackTrace();
                         }
 
-                        if (activity.waitDialog.isShowing()) activity.waitDialog.dismiss();
+                        activity.HideProgressDialog();
                     }
                 }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             } catch (IOException e) {
-                if (activity.waitDialog.isShowing()) activity.waitDialog.dismiss();
+                activity.HideProgressDialog();
                 e.printStackTrace();
             }
         }

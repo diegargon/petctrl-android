@@ -11,7 +11,7 @@
     <string name="configNeed">Debe configurar su dispositivo en el menu de arriba a la derecha</string>
     <string name="closeToContinue">Pulse cerrar al finalizar para volver al modo normal</string>
     <string name="scan">scan</string>
-    <string name="waitdialog">Espere unos segundos</string>
+    <string name="waitDialog">Espere unos segundos</string>
     <string name="needReboot">Exito: Debes reiniciar para ver los cambios</string>
     <string name="adminPassNull">Por favor configure la contraseña de administración</string>
     <!-- Strings related to Settings -->

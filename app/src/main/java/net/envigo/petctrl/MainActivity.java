@@ -1,13 +1,16 @@
 package net.envigo.petctrl;
 
 import android.Manifest;
-import android.app.ProgressDialog;
+import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -22,8 +25,10 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 import org.json.JSONObject;
@@ -51,7 +56,10 @@ public class MainActivity extends AppCompatActivity {
     protected String ap_name = null;
     private boolean ShowWelcome = true;
     protected ArrayList<PetClients> PetClientList = new ArrayList<>();
-    ProgressDialog waitDialog;
+
+    AlertDialog waitProgress;
+    AlertDialog.Builder dialogBuilder;
+
     //private Handler mHandler;
 
     @Override
@@ -65,9 +73,6 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        waitDialog = new ProgressDialog(this);
-        waitDialog.setMessage(getString(R.string.waitdialog));
-        waitDialog.show();
 
         settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         admin_password = settings.getString("admin_password", null);
@@ -105,9 +110,6 @@ public class MainActivity extends AppCompatActivity {
             }
             savedTabPos = stateSaver.getTabPosition();
         }
-
-
-        if (waitDialog.isShowing()) waitDialog.dismiss();
 
         requestPermissions("WRITE_SETTINGS");
 
@@ -166,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
                 ArrayList<PetClients> PetClientList_tmp = PetClientList;
 
                 if (clients.size() == 0) {
-                    if (waitDialog.isShowing()) waitDialog.dismiss();
+                    HideProgressDialog();
                 }
                 for (PetClients clientScanResult : clients) {
 
@@ -188,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
                                 Log.d("Log", "Main assigned slot client" + PetClientList.size());
                             get_client_info(clientScanResult);
                         } else {
-                            if (waitDialog.isShowing()) waitDialog.dismiss();
+                            HideProgressDialog();
                         }
                     } else {
                         PetClientList.add(clientScanResult);
@@ -245,14 +247,14 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
-                if (waitDialog.isShowing()) waitDialog.dismiss();
+                HideProgressDialog();
             }
 
             @Override
             public void onFailure(Exception e) {
                 Log.e("Log", "MAIN Conn get_client_info OnFail: " + e.getMessage());
                 removeClientByID(client.getIpAddr());
-                if (waitDialog.isShowing()) waitDialog.dismiss();
+                HideProgressDialog();
             }
         });
 
@@ -585,5 +587,48 @@ public class MainActivity extends AppCompatActivity {
     public int getSensProgress() {
         OverviewFragment fr = (OverviewFragment) myFragments.get(OverViewPos);
         return fr.getSensBarProgress();
+    }
+
+
+    void ShowProgressDialog() {
+        //if (DEBUG) Log.d("Log", "ShowProgressDialog called");
+
+        if (waitProgress != null) return;
+
+        //if (DEBUG) Log.d("Log", "ProgressDialog create");
+        if (dialogBuilder == null) dialogBuilder = new AlertDialog.Builder(this);
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService( Context.LAYOUT_INFLATER_SERVICE );
+        if(inflater != null) {
+            //null ok in alert dialog, disable warning
+            @SuppressLint("InflateParams") View dialogView = inflater.inflate(R.layout.progress, null);
+            dialogBuilder.setView(dialogView);
+            dialogBuilder.setCancelable(false);
+            waitProgress = dialogBuilder.create();
+            waitProgress.show();
+        }
+    }
+
+    void HideProgressDialog(){
+        //if (DEBUG) Log.d("Log", "HideProcessDialog Called");
+        if (waitProgress != null) {
+            //if (DEBUG) Log.d("Log", "HideProcessDialog dismised");
+            waitProgress.dismiss();
+            waitProgress = null;
+        }
+
+    }
+
+    @SuppressWarnings("deprecation") // need vibrate(int) for <26
+    void shakeIt() {
+        Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        if(v != null) {
+            if (Build.VERSION.SDK_INT >= 26) {
+                v.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
+            } else {
+                v.vibrate(500);
+            }
+
+        }
     }
 }

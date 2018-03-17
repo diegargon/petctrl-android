@@ -17,7 +17,7 @@ import android.widget.Toast;
 
 public class OverviewFragment extends Fragment {
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     protected SharedPreferences settings;
     private Context context;
     public Button btnScan;
@@ -85,7 +85,7 @@ public class OverviewFragment extends Fragment {
             public void onClick(View v) {
                 Log.d("Log", "Overviewfrag: btnScan click called");
                 if (activity != null) {
-                    activity.waitDialog.show();
+                    activity.ShowProgressDialog();
                     activity.getClientList();
                 }
                 //String txt = activity.overviewText();
