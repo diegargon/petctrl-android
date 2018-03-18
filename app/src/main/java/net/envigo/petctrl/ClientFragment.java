@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.text.method.HideReturnsTransformationMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -55,7 +57,9 @@ public class ClientFragment extends Fragment {
     EditText edtPhone;
     String admin_pass;
     int refreshTime;
-
+    ImageButton btnLights;
+    ImageButton btnVibration;
+    ImageButton btnSound;
     ImageView photo;
 
     MainActivity activity;
@@ -75,7 +79,6 @@ public class ClientFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (DEBUG) Log.d("Log", "Client onCreate " + this);
-        //setRetainInstance(true);
 
         if (getArguments() != null && PetClient == null ) {
             PetClientID =  getArguments().getString("PetClientID");
@@ -100,6 +103,8 @@ public class ClientFragment extends Fragment {
             //if (DEBUG) Log.d("Log", "ClientFag: Called runnableClientUpdate RefreshTime: " + refreshTime);
 
             ConnRest conn = new ConnRest(new iConnResult() {
+                int lights, vibration, sound = 0;
+
                 @Override
                 public void onSuccess(JSONObject jsonObject) {
                     //if (DEBUG) Log.d("Log", "Clientfrag refresh success");
@@ -110,6 +115,10 @@ public class ClientFragment extends Fragment {
                             if (PetClient.getRSSI() != Integer.parseInt(RSSI)) {
                                 PetClient.setRSSI(Integer.parseInt(RSSI));
                                 clientUpdate();
+                                lights = jsonObject.getInt("lights");
+                                vibration = jsonObject.getInt("vibration");
+                                sound= jsonObject.getInt("sound");
+                                gpioButtonsState(lights, vibration, sound);
                             }
                             if (!PetClient.isReachable()) {
                                 PetClient.setReachable(true);
@@ -159,7 +168,6 @@ public class ClientFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
 
         admin_pass = activity.getAdminPassword();
         settings = PreferenceManager.getDefaultSharedPreferences(context);
@@ -174,7 +182,6 @@ public class ClientFragment extends Fragment {
             Log.e("Log","Clientfrag PetList on activity its 0");
         }
 
-
         rootView = inflater.inflate(R.layout.fragment_client, container, false);
         txtView = rootView.findViewById(R.id.txtStatus);
         RSSIText = rootView.findViewById(R.id.RSSIText);
@@ -183,13 +190,22 @@ public class ClientFragment extends Fragment {
         edtPhone = rootView.findViewById(R.id.edtPhone);
         RSSIBar = rootView.findViewById(R.id.RSSIBar);
 
+        ImageButton btnSave = rootView.findViewById(R.id.btnSave);
+        ImageButton btnReboot = rootView.findViewById(R.id.btnReboot);
+        btnLights = rootView.findViewById(R.id.btnLights);
+        btnVibration = rootView.findViewById(R.id.btnVibration);
+        btnSound = rootView.findViewById(R.id.btnSound);
+        photo = rootView.findViewById(R.id.clientPhoto);
+
         if (PetClient != null) {
-            if (DEBUG) Log.d("Log","ClientFrag: *client* not null");
             edtPetName.setText(PetClient.getName());
             edtChipID.setText(PetClient.getChip());
             edtPhone.setText(PetClient.getPhoneNumber());
             txtView.setText(PetClient.getIpAddr());
             setRSSI(PetClient.getRSSI());
+            gpioButtonsState(PetClient.lightState, PetClient.vibrationState, PetClient.soundState);
+        } else {
+            Log.e("Log", "Petclient its null");
         }
 
         Switch switchSave = rootView.findViewById(R.id.swtSaveUnlock);
@@ -203,28 +219,12 @@ public class ClientFragment extends Fragment {
             }
         });
 
-        ImageButton btnSave = rootView.findViewById(R.id.btnSave);
-        ImageButton btnReboot = rootView.findViewById(R.id.btnReboot);
-        ImageButton btnLights = rootView.findViewById(R.id.btnLights);
-        ImageButton btnVibration = rootView.findViewById(R.id.btnVibration);
-        ImageButton btnSound = rootView.findViewById(R.id.btnSound);
-        photo = rootView.findViewById(R.id.clientPhoto);
-
-
         if (PetClient != null) {
             if (DEBUG) Log.d("Log", "Clientfrag Petclient not null getting image");
             getPetImage();
         } else {
             Log.e("Log","Clientfrag Petclient null not getting image " + this);
         }
-
-        btnLights.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(context, "Lights", Toast.LENGTH_SHORT).show();
-                if(DEBUG) Log.d("Log", "Lights clicked " + this);
-            }
-        });
 
         photo.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -301,7 +301,7 @@ public class ClientFragment extends Fragment {
 
                                     @Override
                                     public void onFailure(Exception e) {
-                                        if (DEBUG) Log.e("Log", "Reboot no success");
+                                        Log.e("Log", "Reboot no success");
                                     }
                                 });
                                 conn.execute(conn_details, conn_data);
@@ -317,17 +317,27 @@ public class ClientFragment extends Fragment {
             }
         });
 
+        btnLights.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.ShowProgressDialog();
+                gpio_toggle("lights");
+            }
+        });
+
         btnVibration.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(context, "Vibrator", Toast.LENGTH_SHORT).show();
+                activity.ShowProgressDialog();
+                gpio_toggle("vibration");
             }
         });
 
         btnSound.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(context, "Sound", Toast.LENGTH_SHORT).show();
+                activity.ShowProgressDialog();
+                gpio_toggle("sound");
             }
         });
 
@@ -342,21 +352,9 @@ public class ClientFragment extends Fragment {
         return rootView;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (DEBUG) Log.d("Log", "ClientFrag: onResume");
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (DEBUG) Log.d("Log", "ClientFrag: onPause");
-    }
-
     public void setRSSI(int RSSI) {
         if (RSSI > 10) { // greater mean a error
-            Log.e("Log", "Clientfrag: RSSI error");
+            Log.e("Log", "Clientfrag: RSSI error " + RSSI);
             return;
         }
 
@@ -433,23 +431,20 @@ public class ClientFragment extends Fragment {
         conn.execute(conn_details, conn_data);
     }
 
-    public void setRefreshTime(int point) {
-
-        if (point == 0) {
+    void setRefreshTime(int point) {
+        if (point == 0)
             refreshTime = 5 * 1000;
-        } else if (point == 1) {
+         else if (point == 1)
             refreshTime = 10 * 1000;
-        } else if (point == 2) {
+         else if (point == 2)
             refreshTime = 20 * 1000;
-        } else if (point == 3) {
+         else if (point == 3)
             refreshTime = 30 * 1000;
-        } else if (point == 4) {
+         else if (point == 4)
             refreshTime = 60 * 1000;
-        } else if (point == 5) {
+         else if (point == 5)
             refreshTime = 180 * 1000;
-        }
     }
-
 
     @SuppressLint("StaticFieldLeak")
     @Override
@@ -462,13 +457,11 @@ public class ClientFragment extends Fragment {
             Bitmap bitmap;
 
             try {
-
                 bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), selectedImage);
 
                 if (bitmap == null) return;
 
                 activity.ShowProgressDialog();
-
                 int maxWidth = 300;
 
                 if (bitmap.getWidth() > maxWidth) {
@@ -477,11 +470,12 @@ public class ClientFragment extends Fragment {
                     bitmap = Bitmap.createScaledBitmap(bitmap, maxWidth, ratioHeight, false);
                 }
 
+                int quality = 90;
                 if (bitmap.getByteCount() > 100000) {
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 75, bao);
-                } else {
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, bao);
+                    quality = 75;
                 }
+
+                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, bao);
                 Log.d("Log", "Size compressed " + bao.size());
                 byte[] image = bao.toByteArray();
 
@@ -535,19 +529,97 @@ public class ClientFragment extends Fragment {
         }
     }
 
-    public void getPetImage() {
+    void getPetImage() {
         GetPetImageTask getPetImageTask = new GetPetImageTask();
         getPetImageTask.execute("http://" + PetClient.getIpAddr() + "/foto.jpg");
     }
 
     @SuppressLint("StaticFieldLeak")
-    public class GetPetImageTask extends DownloadImageTask {
-        //final ImageView photo = rootView.findViewById(R.id.clientPhoto);
-
+    class GetPetImageTask extends DownloadImageTask {
          @Override
         protected void onPostExecute(Bitmap bitmap) {
             super.onPostExecute(bitmap);
             photo.setImageBitmap(bitmap);
         }
     }
+
+    @SuppressWarnings("unchecked")
+    void gpio_toggle(String gpio_id) {
+
+        if (admin_pass == null) return;
+
+        HashMap<String, String> conn_details = new HashMap<>();
+        HashMap<String, String> conn_data = new HashMap<>();
+
+        conn_details.put("method", "POST");
+        conn_details.put("url", "http://" + PetClient.getIpAddr() + "/gpio_toggle");
+        conn_data.put("admin_password", admin_pass);
+        conn_data.put("toggle", gpio_id);
+
+        ConnRest conn = new ConnRest(new iConnResult() {
+            String msg = getString(R.string.error);
+            int lights = 0;
+            int vibration = 0;
+            int sound = 0;
+
+            @Override
+            public void onSuccess(JSONObject jsonObject) {
+                activity.HideProgressDialog();
+                try {
+                    msg = jsonObject.getString("msg");
+                    lights = jsonObject.getInt("lights");
+                    vibration = jsonObject.getInt("vibration");
+                    sound= jsonObject.getInt("sound");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                Log.d("Log", jsonObject.toString());
+                gpioButtonsState(lights, vibration, sound);
+
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                activity.HideProgressDialog();
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+            }
+        });
+        conn.execute(conn_details, conn_data);
+    }
+
+    void gpioButtonsState(int lights, int vibration, int sound) {
+
+        PetClient.lightState = lights;
+        PetClient.vibrationState = vibration;
+        PetClient.soundState = sound;
+
+        if(lights == 1)
+            btnLights.setColorFilter(Color.argb(255, 255, 51, 0));
+        else
+            btnLights.setColorFilter(Color.argb(255, 0, 0, 0));
+
+        if(vibration == 1)
+            btnVibration.setColorFilter(Color.argb(255, 255, 51, 0));
+         else
+            btnVibration.setColorFilter(Color.argb(255, 0, 0, 0));
+
+        if(sound == 1)
+            btnSound.setColorFilter(Color.argb(255, 255, 51, 0));
+         else
+            btnSound.setColorFilter(Color.argb(255, 0, 0, 0));
+    }
+/*
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (DEBUG) Log.d("Log", "ClientFrag: onResume");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (DEBUG) Log.d("Log", "ClientFrag: onPause");
+    }
+*/
 }

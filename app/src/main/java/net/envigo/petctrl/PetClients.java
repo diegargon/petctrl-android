@@ -7,6 +7,11 @@ package net.envigo.petctrl;
 
 @SuppressWarnings("unused")
 class PetClients {
+
+    int lightState = 0;
+    int soundState = 0;
+    int vibrationState = 0;
+
     private String Name = null;
     private String ChipID = null;
     private String PhoneNumber = null;

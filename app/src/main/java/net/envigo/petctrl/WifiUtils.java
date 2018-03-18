@@ -142,10 +142,9 @@ class WifiUtils {
                     br = new BufferedReader(new FileReader("/proc/net/arp"));
                     String line;
                     while ((line = br.readLine()) != null) {
-                        Log.e("Log", line);
                         String[] splitted = line.split(" +");
 
-                        if ((splitted.length >= 4)) { // Basic sanity check
+                        if (splitted.length >= 4) { // Basic sanity check
                             String mac = splitted[3];
 
                             if (mac.matches("..:..:..:..:..:..")) {

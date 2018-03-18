@@ -19,7 +19,9 @@
     <string name="action_exit">Salir</string>
     <string name="action_pairdevices">Emparejar</string>
     <string name="action_pairdevices_ask">¿Emparejar?</string>
-
+    <string name= "need_this_permission">Esta aplicacion no puede funcionar sin dichos permisos</string>
+    <string name="permission_granted_try_again">Ahora puede intentarlo de nuevo</string>
+    <string name="permission_need_for_photo">Sin estos permisos no podra subir foto</string>
     <!-- General settings -->
     <string name="pref_header_general">General</string>
     <string name="pref_admin_password">Contraseña administracion</string>
@@ -49,7 +51,7 @@
     <string name="sound">Sound</string>
     <string name="vibration">Vibración</string>
     <string name="reboot">Reiniciar</string>
-
+    <string name="error">Error</string>
     <string-array name="desconn_list">
         <item>Nada</item>
         <item>Luces</item>
