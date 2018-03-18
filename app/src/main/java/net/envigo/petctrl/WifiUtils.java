@@ -32,9 +32,7 @@ class WifiUtils {
 
 
     void wifiInit() {
-        if (wifi == null) {
-            wifi = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        }
+        if (wifi == null) wifi = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
     }
     void enableWifi(){
         Log.d("Log:", "Wifi enabled");
@@ -43,10 +41,7 @@ class WifiUtils {
 
     void disableWifi() {
         Log.d("Log:", "Wifi disabled");
-        if (wifi.isWifiEnabled()) {
-            wifi.setWifiEnabled(false);
-        }
-
+        if (wifi.isWifiEnabled()) wifi.setWifiEnabled(false);
     }
 
     boolean enableAP() {
@@ -107,9 +102,7 @@ class WifiUtils {
 
         int netId = wifi.addNetwork(wifiConf);
 
-        if (netId != -1) {
-            wifi.enableNetwork(netId, true);
-        }
+        if (netId != -1)  wifi.enableNetwork(netId, true);
 
 
         //wifi.saveConfiguration();

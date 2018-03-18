@@ -33,8 +33,7 @@ multipart.addFormField("param_name_2", "param_value");
 multipart.addFormField("param_name_3", "param_value");
 multipart.addFilePart("file_param_1", new File(file_path));
 String response = multipart.finish(); // response from server.
-
- */
+*/
 
 @SuppressWarnings({"unused", "SameParameterValue"})
 public class MultipartUtility {
@@ -96,9 +95,8 @@ public class MultipartUtility {
         FileInputStream inputStream = new FileInputStream(uploadFile);
         byte[] buffer = new byte[512]; // new byte[4096];
         int bytesRead;// = -1;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            outputStream.write(buffer, 0, bytesRead);
-        }
+        while ((bytesRead = inputStream.read(buffer)) != -1) outputStream.write(buffer, 0, bytesRead);
+
         outputStream.flush();
         inputStream.close();
 
@@ -121,10 +119,8 @@ public class MultipartUtility {
         // checks server's status code first
         int status = httpConn.getResponseCode();
         if (status == HttpURLConnection.HTTP_OK) {
-
             BufferedInputStream in = new BufferedInputStream(httpConn.getInputStream());
             response = inputStreamToString(in);
-
             httpConn.disconnect();
         } else {
             throw new IOException("Server returned non-OK status: " + status);
@@ -135,17 +131,14 @@ public class MultipartUtility {
 
     private static String inputStreamToString(InputStream in) {
         String result = "";
-        if (in == null) {
-            return result;
-        }
+        if (in == null) return result;
 
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(in,"UTF-8"));
             StringBuilder out = new StringBuilder();
             String line;
-            while ((line = reader.readLine()) != null) {
-                out.append(line);
-            }
+            while ((line = reader.readLine()) != null) out.append(line);
+
             result = out.toString();
             reader.close();
 

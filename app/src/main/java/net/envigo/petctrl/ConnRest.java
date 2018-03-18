@@ -96,9 +96,8 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
 
             StringBuilder sb = new StringBuilder();
 
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
+            while ((line = reader.readLine()) != null) sb.append(line);
+
             result = sb.toString();
 
             inputStream.close();
@@ -126,11 +125,10 @@ public class ConnRest extends AsyncTask<HashMap<String, String>, JSONObject, JSO
     protected void onPostExecute(JSONObject jsonObject) {
         //super.onPostExecute(jsonObject);
         if (mCallBack != null) {
-            if (mException == null) {
+            if (mException == null)
                 mCallBack.onSuccess(jsonObject);
-            } else {
+            else
                 mCallBack.onFailure(mException);
-            }
         }
     }
 
