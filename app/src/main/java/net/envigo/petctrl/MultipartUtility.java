@@ -82,21 +82,20 @@ public class MultipartUtility {
     void addFilePart(String fieldName, File uploadFile)
             throws IOException {
         String fileName = uploadFile.getName();
-        writer.append("--").append(boundary).append(LINE_FEED);
-        writer.append("Content-Disposition: form-data; name=\"")
+        writer.append("--").append(boundary).append(LINE_FEED)
+                .append("Content-Disposition: form-data; name=\"")
                 .append(fieldName).append("\"; filename=\"")
-                .append(fileName).append("\"").append(LINE_FEED);
-        writer.append("Content-Type: ")
+                .append(fileName).append("\"").append(LINE_FEED)
+                .append("Content-Type: ")
                 .append(URLConnection.guessContentTypeFromName(fileName))
-                .append(LINE_FEED);
-        writer.append("Content-Transfer-Encoding: binary").append(LINE_FEED);
-        //writer.append(LINE_FEED); //add a fucking space to file (esp8266+arduino)
+                .append(LINE_FEED)
+                .append("Content-Transfer-Encoding: binary").append(LINE_FEED);
+                //.append(LINE_FEED); //this add a fucking space to file (esp8266+arduino)
         writer.flush();
 
         FileInputStream inputStream = new FileInputStream(uploadFile);
-        //byte[] buffer = new byte[4096];
-        byte[] buffer = new byte[512];
-        int bytesRead = -1;
+        byte[] buffer = new byte[512]; // new byte[4096];
+        int bytesRead;// = -1;
         while ((bytesRead = inputStream.read(buffer)) != -1) {
             outputStream.write(buffer, 0, bytesRead);
         }

@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -39,7 +38,7 @@ import java.util.HashMap;
 
 public class ClientFragment extends Fragment {
 
-    private final static boolean DEBUG = false;
+    private final static boolean DEBUG = true;
     public static final int GET_FROM_GALLERY = 3;
     private boolean saveEnable = false;
     protected SharedPreferences settings = null;
@@ -487,7 +486,8 @@ public class ClientFragment extends Fragment {
                 byte[] image = bao.toByteArray();
 
                 final File f = new File(context.getCacheDir(), "foto_tmp.jpg");
-                f.createNewFile();
+                //noinspection ResultOfMethodCallIgnored
+                f.createNewFile(); // return if file exist true or false
                 FileOutputStream fos = new FileOutputStream(f);
                 fos.write(image);
                 fos.flush();
