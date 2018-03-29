@@ -37,6 +37,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 
+import static java.lang.Math.round;
+
 
 public class ClientFragment extends Fragment {
 
@@ -50,8 +52,10 @@ public class ClientFragment extends Fragment {
     View rootView;
     PetClients PetClient;
     ProgressBar RSSIBar;
+    ProgressBar BatBar;
     TextView txtView ;
     TextView RSSIText;
+    TextView BatText;
     EditText edtPetName;
     EditText edtChipID;
     EditText edtPhone;
@@ -112,14 +116,22 @@ public class ClientFragment extends Fragment {
                     try {
                         if (jsonObject.getString("status").equals("ok")) {
                             String RSSI = jsonObject.getString("RSSI");
-                            if (PetClient.getRSSI() != Integer.parseInt(RSSI)) {
+                            String Battery = jsonObject.getString("adc");
+
+                            if ( (PetClient.getRSSI() != Integer.parseInt(RSSI))
+                                    || (PetClient.getBattery() != Integer.parseInt(Battery) )
+                                    ) {
                                 PetClient.setRSSI(Integer.parseInt(RSSI));
-                                clientUpdate();
+                                PetClient.setBattery(Integer.parseInt(Battery));
+
                                 lights = jsonObject.getInt("lights");
                                 vibration = jsonObject.getInt("vibration");
                                 sound= jsonObject.getInt("sound");
                                 gpioButtonsState(lights, vibration, sound);
+
+                                clientUpdate();
                             }
+
                             if (!PetClient.isReachable()) {
                                 PetClient.setReachable(true);
                                 activity.OverviewUpdate();
@@ -138,6 +150,7 @@ public class ClientFragment extends Fragment {
                     Log.e("Log", "Clientfrag runnable Client update onFailed");
                     if (PetClient.isReachable()) {
                         PetClient.setRSSI(-100);
+                        PetClient.setBattery(0);
                         PetClient.setReachable(false);
                         activity.OverviewUpdate();
                     }
@@ -185,10 +198,12 @@ public class ClientFragment extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_client, container, false);
         txtView = rootView.findViewById(R.id.txtStatus);
         RSSIText = rootView.findViewById(R.id.RSSIText);
+        BatText = rootView.findViewById(R.id.BatText);
         edtPetName = rootView.findViewById(R.id.edtName);
         edtChipID = rootView.findViewById(R.id.edtChipID);
         edtPhone = rootView.findViewById(R.id.edtPhone);
         RSSIBar = rootView.findViewById(R.id.RSSIBar);
+        BatBar = rootView.findViewById(R.id.BatStatus);
 
         ImageButton btnSave = rootView.findViewById(R.id.btnSave);
         ImageButton btnReboot = rootView.findViewById(R.id.btnReboot);
@@ -203,6 +218,7 @@ public class ClientFragment extends Fragment {
             edtPhone.setText(PetClient.getPhoneNumber());
             txtView.setText(PetClient.getIpAddr());
             setRSSI(PetClient.getRSSI());
+            setBattery(PetClient.getBattery());
             gpioButtonsState(PetClient.lightState, PetClient.vibrationState, PetClient.soundState);
         } else {
             Log.e("Log", "Petclient its null");
@@ -369,6 +385,25 @@ public class ClientFragment extends Fragment {
         RSSIText.setText( rssi_text );
 
     }
+    public void setBattery(int Bat) {
+        /* No min feature in progress bar for the api level
+        * battery must go from 1024(4.1) to 699(2.8) = 325 states (ProgressBar)
+        * 699 = 2.8   674 = 2.7v
+        * 4.1v typical 18650 max
+        */
+        int result_status = Bat - 699;
+        if (result_status < 0) result_status = 0;
+
+        float float_voltage = ( (float)Bat * (float) 4.1) / (float) 1024.0 ;
+        double voltage = Math.round(float_voltage * 100.0) / 100.0;
+
+        String battery_text = getString(R.string.battery)
+                + String.valueOf(voltage)
+                + "v";
+
+        BatBar.setProgress(result_status);
+        BatText.setText(battery_text);
+    }
 
     int map_range (int value, int in_min, int in_max, int out_min, int out_max) {
         return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -383,7 +418,7 @@ public class ClientFragment extends Fragment {
         int RSSI = PetClient.getRSSI();
 
         setRSSI(RSSI);
-
+        setBattery(PetClient.getBattery());
         int sens = activity.getSensProgress();
         int sensWarning = (sens * 5) - 100;
         //if (DEBUG) Log.d("Log", "Senswarning setup to " +sensWarning);
@@ -466,7 +501,7 @@ public class ClientFragment extends Fragment {
 
                 if (bitmap.getWidth() > maxWidth) {
                     float aspectRatio = bitmap.getWidth() / (float) bitmap.getHeight();
-                    int ratioHeight = Math.round(maxWidth / aspectRatio);
+                    int ratioHeight = round(maxWidth / aspectRatio);
                     bitmap = Bitmap.createScaledBitmap(bitmap, maxWidth, ratioHeight, false);
                 }
 

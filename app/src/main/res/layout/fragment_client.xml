@@ -106,6 +106,7 @@
 
                 </LinearLayout>
 
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
@@ -127,24 +128,41 @@
                 android:layout_height="wrap_content"
                 android:baselineAligned="false"
                 android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/RSSIText"
+                    android:layout_width="wrap_content"
+                    android:layout_marginStart="3dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="13sp"
+                    android:ems="3"
+                    android:text="" />
 
                     <ProgressBar
                         android:id="@+id/RSSIBar"
                         style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="220dp"
+                        android:layout_width="155dp"
                         android:layout_height="match_parent"
                         android:max="50"
                         android:progress="1"
                         android:scaleY="6" />
-
-                    <TextView
-                        android:id="@+id/RSSIText"
-                        android:layout_width="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_height="wrap_content"
-                        android:ems="4"
-                        android:text="" />
-
+                <TextView
+                    android:id="@+id/BatText"
+                    android:layout_width="wrap_content"
+                    android:layout_marginStart="3dp"
+                    android:layout_height="wrap_content"
+                    android:textSize="13sp"
+                    android:ems="3"
+                    android:text="" />
+                <ProgressBar
+                    android:id="@+id/BatStatus"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="100dp"
+                    android:layout_height="match_parent"
+                    android:max="325"
+                    android:paddingStart="3dp"
+                    android:paddingEnd="1dp"
+                    android:progress="1"
+                    android:scaleY="6" />
             </LinearLayout>
 
             <LinearLayout

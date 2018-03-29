@@ -52,6 +52,7 @@
     <string name="vibration">Vibración</string>
     <string name="reboot">Reiniciar</string>
     <string name="error">Error</string>
+    <string name="battery">Bat:</string>
     <string-array name="desconn_list">
         <item>Nada</item>
         <item>Luces</item>

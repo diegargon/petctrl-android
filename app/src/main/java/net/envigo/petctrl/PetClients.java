@@ -16,6 +16,7 @@ class PetClients {
     private String ChipID = null;
     private String PhoneNumber = null;
     private int RSSI = 1;
+    private int Battery = 1;
     private String IpAddr;
     private String HWAddr;
     private String Device;
@@ -70,5 +71,6 @@ class PetClients {
     void setPhoneNumber(String phone) { this.PhoneNumber = phone;}
     int getRSSI() { return this.RSSI;}
     void setRSSI(int rssi) { this.RSSI = rssi;}
-
+    int getBattery() { return this.Battery;}
+    void setBattery(int rssi) { this.Battery = rssi;}
 }
